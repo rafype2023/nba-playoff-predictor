@@ -21,6 +21,15 @@ const predictionSchema = new mongoose.Schema({
 });
 const Prediction = mongoose.model('Prediction', predictionSchema);
 
+const resultSchema = new mongoose.Schema({
+  firstRound: Object,        // { east-0: { winner: "Team", games: "4-2" }, ... }
+  semifinals: Object,
+  conferenceFinals: Object,
+  finals: Object,
+  timestamp: { type: Date, default: Date.now },
+});
+const Result = mongoose.model('Result', resultSchema, 'results');
+
 app.post('/api/predictions', async (req, res) => {
   try {
     const { userData, predictions } = req.body;
@@ -30,6 +39,65 @@ app.post('/api/predictions', async (req, res) => {
   } catch (error) {
     console.error('Error saving prediction:', error);
     res.status(500).json({ error: 'Failed to save prediction' });
+  }
+});
+
+app.post('/api/results', async (req, res) => {
+  try {
+    const { firstRound, semifinals, conferenceFinals, finals } = req.body;
+    const newResult = new Result({ firstRound, semifinals, conferenceFinals, finals });
+    await newResult.save();
+    res.status(201).json({ message: 'Results saved', id: newResult._id });
+  } catch (error) {
+    console.error('Error saving results:', error);
+    res.status(500).json({ error: 'Failed to save results' });
+  }
+});
+
+app.get('/api/scores', async (req, res) => {
+  try {
+    const predictions = await Prediction.find(); // All user predictions
+    const results = await Result.findOne().sort({ timestamp: -1 }); // Latest result
+    if (!results) return res.status(404).json({ error: 'No results found' });
+
+    const scores = predictions.map(prediction => {
+      let score = 0;
+      // First Round: 1 point each
+      for (const key in prediction.firstRound) {
+        if (results.firstRound[key] && 
+            prediction.firstRound[key].winner === results.firstRound[key].winner && 
+            prediction.firstRound[key].games === results.firstRound[key].games) {
+          score += 1;
+        }
+      }
+      // Semifinals: 2 points each
+      for (const key in prediction.semifinals) {
+        if (results.semifinals[key] && 
+            prediction.semifinals[key].winner === results.semifinals[key].winner && 
+            prediction.semifinals[key].games === results.semifinals[key].games) {
+          score += 2;
+        }
+      }
+      // Conference Finals: 3 points each
+      for (const key in prediction.conferenceFinals) {
+        if (results.conferenceFinals[key] && 
+            prediction.conferenceFinals[key].winner === results.conferenceFinals[key].winner && 
+            prediction.conferenceFinals[key].games === results.conferenceFinals[key].games) {
+          score += 3;
+        }
+      }
+      // Finals: 4 points
+      if (prediction.finals.finals && results.finals.finals &&
+          prediction.finals.finals.winner === results.finals.finals.winner &&
+          prediction.finals.finals.games === results.finals.finals.games) {
+        score += 4;
+      }
+      return { user: prediction.userData.name, score };
+    });
+    res.json(scores);
+  } catch (error) {
+    console.error('Error calculating scores:', error);
+    res.status(500).json({ error: 'Failed to calculate scores' });
   }
 });
 
