@@ -83,7 +83,7 @@ const NBAPlayoffPredictor = () => {
   const saveResultsToDatabase = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/predictions', {
+      const response = await fetch('https://nba-playoff-predictor-server.onrender.com/api/predictions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
