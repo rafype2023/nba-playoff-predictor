@@ -14,9 +14,9 @@ const NBAPlayoffPredictor = () => {
   const [confFinalTeams, setConfFinalTeams] = useState({ east: [], west: [] });
   const [isLoading, setIsLoading] = useState(false);
 
-  const eastTeams = ['Celtics', 'Bucks', '76ers', 'Heat', 'Knicks', 'Cavaliers', 'Nets', 'Hawks'];
-  const westTeams = ['Nuggets', 'Suns', 'Warriors', 'Lakers', 'Clippers', 'Grizzlies', 'Mavericks', 'Kings'];
-  const mvpOptions = ['J. Tatum', 'G. Antetokounmpo', 'J. Embiid', 'N. Jokic', 'S. Curry'];
+ const eastTeams = ['Celtics', 'Bucks', 'Pacers', 'Heat', 'Knicks', 'Cavaliers', 'Pistons', 'Magic'];
+  const westTeams = ['Thunder', 'Nuggets', 'Warriors', 'Lakers', 'Clippers', 'Grizzlies', 'Rockets', 'Kings'];
+  const mvpOptions = ['J. Tatum', 'G. Antetokounmpo', 'L. James', 'N. Jokic', 'S. Curry','L. Doncic','Shai Gail'];
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
