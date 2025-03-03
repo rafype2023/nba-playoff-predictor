@@ -1,28 +1,41 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const bodyParser = require('body-parser'); // If you're using body-parser as per your package.json
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// Middleware
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json()); // Using body-parser instead of express.json() if listed in package.json
+// Alternatively, if not using body-parser, use:
+// app.use(express.json());
 
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => console.log('Connected to MongoDB'))
+// MongoDB Connection
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
+// Prediction Schema and Model
 const predictionSchema = new mongoose.Schema({
-  userData: { name: String, email: String, phone: String },
-  predictions: Object,
+  userData: {
+    name: String,
+    email: String,
+    phone: String,
+  },
+  predictions: Object, // Original schema might differ; adjust if needed
+  firstRound: Object,
+  semifinals: Object,
+  conferenceFinals: Object,
+  finals: Object,
   timestamp: { type: Date, default: Date.now },
 });
-const Prediction = mongoose.model('Prediction', predictionSchema);
+const Prediction = mongoose.model('Prediction', predictionSchema, 'predictions');
 
+// Result Schema and Model
 const resultSchema = new mongoose.Schema({
-  firstRound: Object,        // { east-0: { winner: "Team", games: "4-2" }, ... }
+  firstRound: Object,
   semifinals: Object,
   conferenceFinals: Object,
   finals: Object,
@@ -30,6 +43,7 @@ const resultSchema = new mongoose.Schema({
 });
 const Result = mongoose.model('Result', resultSchema, 'results');
 
+// Existing Endpoint: Save Predictions
 app.post('/api/predictions', async (req, res) => {
   try {
     const { userData, predictions } = req.body;
@@ -42,6 +56,7 @@ app.post('/api/predictions', async (req, res) => {
   }
 });
 
+// Existing Endpoint: Save Results
 app.post('/api/results', async (req, res) => {
   try {
     const { firstRound, semifinals, conferenceFinals, finals } = req.body;
@@ -54,55 +69,82 @@ app.post('/api/results', async (req, res) => {
   }
 });
 
+// New Endpoint: Calculate Scores
 app.get('/api/scores', async (req, res) => {
   try {
-    const predictions = await Prediction.find(); // All user predictions
-    const results = await Result.findOne().sort({ timestamp: -1 }); // Latest result
-    if (!results) return res.status(404).json({ error: 'No results found' });
+    const predictions = await Prediction.find();
+    if (!predictions || predictions.length === 0) {
+      console.log('No predictions found in database');
+      return res.json([]);
+    }
+
+    const results = await Result.findOne().sort({ timestamp: -1 });
+    if (!results) {
+      console.log('No results found in database');
+      return res.status(404).json({ error: 'No results found' });
+    }
 
     const scores = predictions.map(prediction => {
       let score = 0;
-      // First Round: 1 point each
-      for (const key in prediction.firstRound) {
-        if (results.firstRound[key] && 
-            prediction.firstRound[key].winner === results.firstRound[key].winner && 
-            prediction.firstRound[key].games === results.firstRound[key].games) {
-          score += 1;
+
+      // First Round
+      if (prediction.firstRound && results.firstRound) {
+        for (const key in prediction.firstRound) {
+          if (results.firstRound[key] && 
+              prediction.firstRound[key].winner === results.firstRound[key].winner && 
+              prediction.firstRound[key].games === results.firstRound[key].games) {
+            score += 1;
+          }
         }
       }
-      // Semifinals: 2 points each
-      for (const key in prediction.semifinals) {
-        if (results.semifinals[key] && 
-            prediction.semifinals[key].winner === results.semifinals[key].winner && 
-            prediction.semifinals[key].games === results.semifinals[key].games) {
-          score += 2;
+
+      // Semifinals
+      if (prediction.semifinals && results.semifinals) {
+        for (const key in prediction.semifinals) {
+          if (results.semifinals[key] && 
+              prediction.semifinals[key].winner === results.semifinals[key].winner && 
+              prediction.semifinals[key].games === results.semifinals[key].games) {
+            score += 2;
+          }
         }
       }
-      // Conference Finals: 3 points each
-      for (const key in prediction.conferenceFinals) {
-        if (results.conferenceFinals[key] && 
-            prediction.conferenceFinals[key].winner === results.conferenceFinals[key].winner && 
-            prediction.conferenceFinals[key].games === results.conferenceFinals[key].games) {
-          score += 3;
+
+      // Conference Finals
+      if (prediction.conferenceFinals && results.conferenceFinals) {
+        for (const key in prediction.conferenceFinals) {
+          if (results.conferenceFinals[key] && 
+              prediction.conferenceFinals[key].winner === results.conferenceFinals[key].winner && 
+              prediction.conferenceFinals[key].games === results.conferenceFinals[key].games) {
+            score += 3;
+          }
         }
       }
-      // Finals: 4 points for winner/games, 1 extra for MVP
-      if (prediction.finals.finals && results.finals.finals) {
-        if (prediction.finals.finals.winner === results.finals.finals.winner &&
-            prediction.finals.finals.games === results.finals.finals.games) {
-          score += 4;
-        }
-        if (prediction.finals.finals.mvp === results.finals.finals.mvp) {
-          score += 1; // Bonus point for correct MVP
-        }
+
+      // Finals
+      const predFinals = prediction.finals || {};
+      const resFinals = results.finals || {};
+      const predFinalsData = predFinals.finals || {};
+      const resFinalsData = resFinals.finals || {};
+
+      if (predFinalsData.winner && resFinalsData.winner && 
+          predFinalsData.winner === resFinalsData.winner && 
+          predFinalsData.games === resFinalsData.games) {
+        score += 4;
       }
-      return { user: prediction.userData.name, score };
+      if (predFinalsData.mvp && resFinalsData.mvp && 
+          predFinalsData.mvp === resFinalsData.mvp) {
+        score += 1;
+      }
+
+      return { user: prediction.userData?.name || 'Unknown', score };
     });
+
     res.json(scores);
   } catch (error) {
-    console.error('Error calculating scores:', error);
-    res.status(500).json({ error: 'Failed to calculate scores' });
+    console.error('Error calculating scores:', error.stack);
+    res.status(500).json({ error: 'Failed to calculate scores', details: error.message });
   }
-});      
+});
 
+// Start Server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
