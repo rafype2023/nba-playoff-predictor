@@ -86,11 +86,15 @@ app.get('/api/scores', async (req, res) => {
           score += 3;
         }
       }
-      // Finals: 4 points
-      if (prediction.finals.finals && results.finals.finals &&
-          prediction.finals.finals.winner === results.finals.finals.winner &&
-          prediction.finals.finals.games === results.finals.finals.games) {
-        score += 4;
+      // Finals: 4 points for winner/games, 1 extra for MVP
+      if (prediction.finals.finals && results.finals.finals) {
+        if (prediction.finals.finals.winner === results.finals.finals.winner &&
+            prediction.finals.finals.games === results.finals.finals.games) {
+          score += 4;
+        }
+        if (prediction.finals.finals.mvp === results.finals.finals.mvp) {
+          score += 1; // Bonus point for correct MVP
+        }
       }
       return { user: prediction.userData.name, score };
     });
@@ -99,6 +103,6 @@ app.get('/api/scores', async (req, res) => {
     console.error('Error calculating scores:', error);
     res.status(500).json({ error: 'Failed to calculate scores' });
   }
-});
+});      
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
