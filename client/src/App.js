@@ -14,9 +14,10 @@ const NBAPlayoffPredictor = () => {
   const [confFinalTeams, setConfFinalTeams] = useState({ east: [], west: [] });
   const [isLoading, setIsLoading] = useState(false);
 
-  const eastTeams = ['Celtics', 'Bucks', 'Pacers', 'Heat', 'Knicks', 'Cavaliers', 'Pistons', 'Magic'];
+  cconst eastTeams = ['Celtics', 'Bucks', 'Pacers', 'Heat', 'Knicks', 'Cavaliers', 'Pistons', 'Magic'];
   const westTeams = ['Thunder', 'Nuggets', 'Warriors', 'Lakers', 'Clippers', 'Grizzlies', 'Rockets', 'Kings'];
   const mvpOptions = ['J. Tatum', 'G. Antetokounmpo', 'L. James', 'N. Jokic', 'S. Curry','L. Doncic','Shai Gail'];
+
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -78,7 +79,7 @@ const NBAPlayoffPredictor = () => {
     }
     console.log('SemiFinalTeams after update:', semiFinalTeams);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [predictions, step]); // Ignoring semiFinalTeams as it's only logged, not used in logic
+  }, [predictions, step]);
 
   const saveResultsToDatabase = async () => {
     setIsLoading(true);
@@ -103,56 +104,58 @@ const NBAPlayoffPredictor = () => {
       setIsLoading(false);
     }
   };
+
   const Matchup = ({ teams, round, matchupId, tooltip }) => (
-  <div className="bg-white p-4 rounded-lg shadow-md mb-6 relative group"> {/* Increased from mb-4 to mb-6 */}
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <img 
-          src={`/${teams[0].toLowerCase()}.png`} 
-          alt={`${teams[0]} logo`} 
-          className="w-8 h-8" 
-          onError={(e) => (e.target.src = '/placeholder-logo.png')}
-        />
-        <span className="font-medium">{teams[0]}</span>
+    <div className="bg-white p-4 rounded-lg shadow-md mb-6 relative group">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <img 
+            src={`/${teams[0].toLowerCase()}.png`} 
+            alt={`${teams[0]} logo`} 
+            className="w-8 h-8" 
+            onError={(e) => (e.target.src = '/placeholder-logo.png')}
+          />
+          <span className="font-medium">{teams[0]}</span>
+        </div>
+        <span className="text-gray-500">vs</span>
+        <div className="flex items-center gap-2">
+          <span className="font-medium">{teams[1]}</span>
+          <img 
+            src={`/${teams[1].toLowerCase()}.png`} 
+            alt={`${teams[1]} logo`} 
+            className="w-8 h-8" 
+            onError={(e) => (e.target.src = '/placeholder-logo.png')}
+          />
+        </div>
       </div>
-      <span className="text-gray-500">vs</span>
-      <div className="flex items-center gap-2">
-        <span className="font-medium">{teams[1]}</span>
-        <img 
-          src={`/${teams[1].toLowerCase()}.png`} 
-          alt={`${teams[1]} logo`} 
-          className="w-8 h-8" 
-          onError={(e) => (e.target.src = '/placeholder-logo.png')}
-        />
+      <select 
+        className="mt-4 p-2 rounded w-full border focus:ring-2 focus:ring-blue-500"
+        value={predictions[round][matchupId]?.winner || ''}
+        onChange={(e) => handlePrediction(round, matchupId, 'winner', e.target.value)}
+      >
+        <option value="">Select Winner</option>
+        {teams.map(team => (
+          <option key={team} value={team} disabled={team === 'TBD'}>{team}</option>
+        ))}
+      </select>
+      <select 
+        className="mt-6 p-2 rounded w-full border focus:ring-2 focus:ring-blue-500"
+        value={predictions[round][matchupId]?.games || ''}
+        onChange={(e) => handlePrediction(round, matchupId, 'games', e.target.value)}
+        disabled={!predictions[round][matchupId]?.winner || teams.includes('TBD')}
+      >
+        <option value="">Select Games</option>
+        <option value="4-0">4-0</option>
+        <option value="4-1">4-1</option>
+        <option value="4-2">4-2</option>
+        <option value="4-3">4-3</option>
+      </select>
+      <div className="absolute hidden group-hover:block bg-gray-800 text-white text-sm p-2 rounded -top-10 left-1/2 transform -translate-x-1/2">
+        {tooltip}
       </div>
     </div>
-    <select 
-      className="mt-4 p-2 rounded w-full border focus:ring-2 focus:ring-blue-500" {/* Increased from mt-2 to mt-4 */}
-      value={predictions[round][matchupId]?.winner || ''}
-      onChange={(e) => handlePrediction(round, matchupId, 'winner', e.target.value)}
-    >
-      <option value="">Select Winner</option>
-      {teams.map(team => (
-        <option key={team} value={team} disabled={team === 'TBD'}>{team}</option>
-      ))}
-    </select>
-    <select 
-      className="mt-6 p-2 rounded w-full border focus:ring-2 focus:ring-blue-500" {/* Increased from mt-4 to mt-6 */}
-      value={predictions[round][matchupId]?.games || ''}
-      onChange={(e) => handlePrediction(round, matchupId, 'games', e.target.value)}
-      disabled={!predictions[round][matchupId]?.winner || teams.includes('TBD')}
-    >
-      <option value="">Select Games</option>
-      <option value="4-0">4-0</option>
-      <option value="4-1">4-1</option>
-      <option value="4-2">4-2</option>
-      <option value="4-3">4-3</option>
-    </select>
-    <div className="absolute hidden group-hover:block bg-gray-800 text-white text-sm p-2 rounded -top-10 left-1/2 transform -translate-x-1/2">
-      {tooltip}
-    </div>
-  </div>
-);
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-lg">
