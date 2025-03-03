@@ -24,7 +24,7 @@ const NBAPlayoffPredictor = () => {
   // Play-in team pools
   const eastPlayInTeams = ['Magic', 'Pistons', 'Pacers', 'Wizards'];
   const westPlayInTeams = ['Rockets', 'Pelicans', 'Spurs', 'Timberwolves'];
-  const mvpOptions = ['Giannis Antetokounmpo', 'Damian Lillard', 'Tyrese Haliburton', 'Bennedict Mathurin', 'Cade Cunningham', 'Jaden Ivey', 'Jimmy Butler', 'Bam Adebayo', 'Paolo Banchero', 'Franz Wagner', 'Shai Gilgeous-Alexander', 'Josh Giddey', 'LeBron James', 'Luka Dončić', 'Nikola Jokić', 'Jamal Murray', 'Ja Morant', 'Jaren Jackson Jr.', 'Jalen Green', 'Jabari Smith Jr.', 'Kawhi Leonard', 'Paul George', 'Stephen Curry', 'Jimmy Butler', 'Anthony Edwards', 'Karl-Anthony Towns'];
+  const mvpOptions = ['De'Andre Hunter', 'Ty Jerome', 'Jaylen Brown', 'Jayson Tatum', 'Jalen Brunson', 'Karl-Anthony Towns', 'Giannis Antetokounmpo', 'Damian Lillard', 'Tyrese Haliburton', 'Bennedict Mathurin', 'Cade Cunningham', 'Jaden Ivey', 'Jimmy Butler', 'Bam Adebayo', 'Paolo Banchero', 'Franz Wagner', 'Shai Gilgeous-Alexander', 'Josh Giddey', 'LeBron James', 'Luka Dončić', 'Nikola Jokić', 'Jamal Murray', 'Ja Morant', 'Jaren Jackson Jr.', 'Jalen Green', 'Jabari Smith Jr.', 'Kawhi Leonard', 'Paul George', 'Stephen Curry', 'Jimmy Butler];
 
   // Dynamically updated full team lists after play-in selection
   const eastTeams = [...eastSeeds, playInSelections.east.seven, playInSelections.east.eight];
@@ -535,14 +535,14 @@ const NBAPlayoffPredictor = () => {
                   </div>
                 </div>
                 <div>
-                  <span className="font-bold">Semifinals:</span>
+                  <span className="font-bold">**Semifinals:**</span>
                   <div className="pl-8 space-y-1">
                     <div>{predictions.semifinals['east-semi-0']?.winner} ({predictions.semifinals['east-semi-0']?.games})</div>
                     <div>{predictions.semifinals['east-semi-1']?.winner} ({predictions.semifinals['east-semi-1']?.games})</div>
                   </div>
                 </div>
                 <div>
-                  <span className="font-bold">Conference Final:</span>
+                  <span className="font-bold">***Conference Final:***</span>
                   <div className="pl-12 space-y-1">
                     <div>{predictions.conferenceFinals['east-final']?.winner} ({predictions.conferenceFinals['east-final']?.games})</div>
                   </div>
@@ -564,14 +564,14 @@ const NBAPlayoffPredictor = () => {
                   </div>
                 </div>
                 <div>
-                  <span className="font-bold">Semifinals:</span>
+                  <span className="font-bold">**Semifinals:**</span>
                   <div className="pl-8 space-y-1">
                     <div>{predictions.semifinals['west-semi-0']?.winner} ({predictions.semifinals['west-semi-0']?.games})</div>
                     <div>{predictions.semifinals['west-semi-1']?.winner} ({predictions.semifinals['west-semi-1']?.games})</div>
                   </div>
                 </div>
                 <div>
-                  <span className="font-bold">Conference Final:</span>
+                  <span className="font-bold">***Conference Final:***</span>
                   <div className="pl-12 space-y-1">
                     <div>{predictions.conferenceFinals['west-final']?.winner} ({predictions.conferenceFinals['west-final']?.games})</div>
                   </div>
