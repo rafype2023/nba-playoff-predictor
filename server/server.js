@@ -93,6 +93,7 @@ app.get('/api/scores', async (req, res) => {
       // First Round (1 point for winner, 1 for games)
       if (prediction.firstRound && results.firstRound) {
         for (const key in prediction.firstRound) {
+          console.log(`Comparing First Round ${key}: Pred ${JSON.stringify(prediction.firstRound[key])}, Res ${JSON.stringify(results.firstRound[key])}`);
           if (results.firstRound[key]) {
             if (prediction.firstRound[key].winner === results.firstRound[key].winner) {
               score += 1;
@@ -109,6 +110,7 @@ app.get('/api/scores', async (req, res) => {
       // Semifinals (2 points for winner, 1 for games)
       if (prediction.semifinals && results.semifinals) {
         for (const key in prediction.semifinals) {
+          console.log(`Comparing Semifinals ${key}: Pred ${JSON.stringify(prediction.semifinals[key])}, Res ${JSON.stringify(results.semifinals[key])}`);
           if (results.semifinals[key]) {
             if (prediction.semifinals[key].winner === results.semifinals[key].winner) {
               score += 2;
@@ -125,6 +127,7 @@ app.get('/api/scores', async (req, res) => {
       // Conference Finals (3 points for winner, 1 for games)
       if (prediction.conferenceFinals && results.conferenceFinals) {
         for (const key in prediction.conferenceFinals) {
+          console.log(`Comparing Conference Finals ${key}: Pred ${JSON.stringify(prediction.conferenceFinals[key])}, Res ${JSON.stringify(results.conferenceFinals[key])}`);
           if (results.conferenceFinals[key]) {
             if (prediction.conferenceFinals[key].winner === results.conferenceFinals[key].winner) {
               score += 3;
@@ -144,6 +147,7 @@ app.get('/api/scores', async (req, res) => {
       const predFinalsData = predFinals.finals || {};
       const resFinalsData = resFinals.finals || {};
 
+      console.log(`Comparing Finals: Pred ${JSON.stringify(predFinalsData)}, Res ${JSON.stringify(resFinalsData)}`);
       if (predFinalsData.winner && resFinalsData.winner && 
           predFinalsData.winner === resFinalsData.winner) {
         score += 4;
@@ -168,7 +172,7 @@ app.get('/api/scores', async (req, res) => {
     console.error('Error calculating scores:', error.stack);
     res.status(500).json({ error: 'Failed to calculate scores', details: error.message });
   }
-});
+});         
 
 // Start Server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
