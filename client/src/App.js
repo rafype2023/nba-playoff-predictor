@@ -19,7 +19,7 @@ const NBAPlayoffPredictor = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   // Hardcoded top 6 seeds
-  const eastSeeds = ['Celtics', 'Bucks', '76ers', 'Heat', 'Knicks', 'Cavaliers'];
+  const eastSeeds = ['Celtics', 'Bucks', 'Pacers', 'Heat', 'Knicks', 'Cavaliers'];
   const westSeeds = ['Nuggets', 'Suns', 'Warriors', 'Lakers', 'Clippers', 'Grizzlies'];
   // Play-in team pools
   const eastPlayInTeams = ['Magic', 'Pistons', 'Pacers', 'Wizards'];
