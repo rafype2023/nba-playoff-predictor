@@ -14,7 +14,7 @@ const NBAPlayoffPredictor = () => {
   const [confFinalTeams, setConfFinalTeams] = useState({ east: [], west: [] });
   const [isLoading, setIsLoading] = useState(false);
 
- const eastTeams = ['Celtics', 'Bucks', 'Pacers', 'Heat', 'Knicks', 'Cavaliers', 'Pistons', 'Magic'];
+  const eastTeams = ['Celtics', 'Bucks', 'Pacers', 'Heat', 'Knicks', 'Cavaliers', 'Pistons', 'Magic'];
   const westTeams = ['Thunder', 'Nuggets', 'Warriors', 'Lakers', 'Clippers', 'Grizzlies', 'Rockets', 'Kings'];
   const mvpOptions = ['J. Tatum', 'G. Antetokounmpo', 'L. James', 'N. Jokic', 'S. Curry','L. Doncic','Shai Gail'];
 
@@ -397,27 +397,27 @@ const NBAPlayoffPredictor = () => {
 
             {/* Eastern Conference */}
             <div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">Eastern Conference:</h3>
-              <div className="space-y-2">
-                <div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-4">Eastern Conference:</h3>
+              <div className="space-y-4">
+                <div className="border border-gray-300 bg-gray-100 p-4 rounded">
                   <span className="font-bold">First Round:</span>
-                  <div className="pl-4 space-y-1">
+                  <div className="mt-2 space-y-1">
                     <div>{predictions.firstRound['east-0']?.winner} ({predictions.firstRound['east-0']?.games})</div>
                     <div>{predictions.firstRound['east-1']?.winner} ({predictions.firstRound['east-1']?.games})</div>
                     <div>{predictions.firstRound['east-2']?.winner} ({predictions.firstRound['east-2']?.games})</div>
                     <div>{predictions.firstRound['east-3']?.winner} ({predictions.firstRound['east-3']?.games})</div>
                   </div>
                 </div>
-                <div className="pl-4">
+                <div className="border border-gray-300 bg-gray-100 p-4 rounded">
                   <span className="font-bold">Semifinals:</span>
-                  <div className="pl-4 space-y-1">
+                  <div className="pl-4 mt-2 space-y-1">
                     <div>{predictions.semifinals['east-semi-0']?.winner} ({predictions.semifinals['east-semi-0']?.games})</div>
                     <div>{predictions.semifinals['east-semi-1']?.winner} ({predictions.semifinals['east-semi-1']?.games})</div>
                   </div>
                 </div>
-                <div className="pl-8">
+                <div className="border border-gray-300 bg-gray-100 p-4 rounded">
                   <span className="font-bold">Conference Final:</span>
-                  <div className="pl-4">
+                  <div className="pl-4 mt-2">
                     <div>{predictions.conferenceFinals['east-final']?.winner} ({predictions.conferenceFinals['east-final']?.games})</div>
                   </div>
                 </div>
@@ -426,27 +426,27 @@ const NBAPlayoffPredictor = () => {
 
             {/* Western Conference */}
             <div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">Western Conference:</h3>
-              <div className="space-y-2">
-                <div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-4">Western Conference:</h3>
+              <div className="space-y-4">
+                <div className="border border-gray-300 bg-gray-100 p-4 rounded">
                   <span className="font-bold">First Round:</span>
-                  <div className="pl-4 space-y-1">
+                  <div className="mt-2 space-y-1">
                     <div>{predictions.firstRound['west-0']?.winner} ({predictions.firstRound['west-0']?.games})</div>
                     <div>{predictions.firstRound['west-1']?.winner} ({predictions.firstRound['west-1']?.games})</div>
                     <div>{predictions.firstRound['west-2']?.winner} ({predictions.firstRound['west-2']?.games})</div>
                     <div>{predictions.firstRound['west-3']?.winner} ({predictions.firstRound['west-3']?.games})</div>
                   </div>
                 </div>
-                <div className="pl-4">
+                <div className="border border-gray-300 bg-gray-100 p-4 rounded">
                   <span className="font-bold">Semifinals:</span>
-                  <div className="pl-4 space-y-1">
+                  <div className="pl-4 mt-2 space-y-1">
                     <div>{predictions.semifinals['west-semi-0']?.winner} ({predictions.semifinals['west-semi-0']?.games})</div>
                     <div>{predictions.semifinals['west-semi-1']?.winner} ({predictions.semifinals['west-semi-1']?.games})</div>
                   </div>
                 </div>
-                <div className="pl-8">
+                <div className="border border-gray-300 bg-gray-100 p-4 rounded">
                   <span className="font-bold">Conference Final:</span>
-                  <div className="pl-4">
+                  <div className="pl-4 mt-2">
                     <div>{predictions.conferenceFinals['west-final']?.winner} ({predictions.conferenceFinals['west-final']?.games})</div>
                   </div>
                 </div>
@@ -455,10 +455,10 @@ const NBAPlayoffPredictor = () => {
 
             {/* Finals */}
             <div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">Finals:</h3>
-              <div className="pl-4">
-                <div>{predictions.conferenceFinals['east-final']?.winner} vs {predictions.conferenceFinals['west-final']?.winner}:</div>
-                <div className="pl-4">
+              <h3 className="text-xl font-semibold text-gray-700 mb-4">Finals:</h3>
+              <div className="border border-gray-300 bg-gray-200 p-4 rounded">
+                <div>{predictions.conferenceFinals['east-final']?.winner} vs {predictions.conferenceFinals['west-final']?.winner}</div>
+                <div className="pl-4 mt-2 space-y-1">
                   <div>{predictions.finals.finals?.winner} ({predictions.finals.finals?.games})</div>
                   <div>MVP: {predictions.finals.finals?.mvp}</div>
                 </div>
