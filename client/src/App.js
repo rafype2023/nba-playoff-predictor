@@ -9,15 +9,26 @@ const NBAPlayoffPredictor = () => {
     conferenceFinals: {},
     finals: {}
   });
+  const [playInSelections, setPlayInSelections] = useState({
+    east: { seven: '', eight: '' },
+    west: { seven: '', eight: '' }
+  });
   const [error, setError] = useState('');
   const [semiFinalTeams, setSemiFinalTeams] = useState({ east: [], west: [] });
   const [confFinalTeams, setConfFinalTeams] = useState({ east: [], west: [] });
   const [isLoading, setIsLoading] = useState(false);
 
-  const eastTeams = ['Celtics', 'Bucks', 'Pacers', 'Heat', 'Knicks', 'Cavaliers', 'Pistons', 'Magic'];
-  const westTeams = ['Thunder', 'Nuggets', 'Warriors', 'Lakers', 'Clippers', 'Grizzlies', 'Rockets', 'Kings'];
-  const mvpOptions = ['J. Tatum', 'G. Antetokounmpo', 'L. James', 'N. Jokic', 'S. Curry','L. Doncic','Shai Gail'];
+  // Hardcoded top 6 seeds
+  const eastSeeds = ['Celtics', 'Bucks', '76ers', 'Heat', 'Knicks', 'Cavaliers'];
+  const westSeeds = ['Nuggets', 'Suns', 'Warriors', 'Lakers', 'Clippers', 'Grizzlies'];
+  // Play-in team pools
+  const eastPlayInTeams = ['Magic', 'Pistons', 'Pacers', 'Wizards'];
+  const westPlayInTeams = ['Rockets', 'Pelicans', 'Spurs', 'Timberwolves'];
+  const mvpOptions = ['J. Tatum', 'G. Antetokounmpo', 'J. Embiid', 'N. Jokic', 'S. Curry'];
 
+  // Dynamically updated full team lists after play-in selection
+  const eastTeams = [...eastSeeds, playInSelections.east.seven, playInSelections.east.eight];
+  const westTeams = [...westSeeds, playInSelections.west.seven, playInSelections.west.eight];
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -27,6 +38,17 @@ const NBAPlayoffPredictor = () => {
     console.log(`Validating ${round}:`, roundData, matchups);
     return matchups.length > 0 && matchups.every(matchup => 
       roundData[matchup].winner && roundData[matchup].games
+    );
+  };
+
+  const validatePlayIn = () => {
+    return (
+      playInSelections.east.seven && 
+      playInSelections.east.eight && 
+      playInSelections.west.seven && 
+      playInSelections.west.eight &&
+      playInSelections.east.seven !== playInSelections.east.eight &&
+      playInSelections.west.seven !== playInSelections.west.eight
     );
   };
 
@@ -49,9 +71,20 @@ const NBAPlayoffPredictor = () => {
     setError('');
   };
 
+  const handlePlayInSelection = (conference, seed, value) => {
+    setPlayInSelections(prev => ({
+      ...prev,
+      [conference]: {
+        ...prev[conference],
+        [seed]: value
+      }
+    }));
+    setError('');
+  };
+
   useEffect(() => {
     console.log('Current step:', step);
-    if (step >= 3) {
+    if (step >= 4) {
       const eastWinners = Object.entries(predictions.firstRound)
         .filter(([key, value]) => key.startsWith('east') && value.winner)
         .map(([, value]) => value.winner);
@@ -64,7 +97,7 @@ const NBAPlayoffPredictor = () => {
         west: westWinners.length === 4 ? westWinners : westWinners.concat(Array(4 - westWinners.length).fill('TBD'))
       });
     }
-    if (step >= 4) {
+    if (step >= 5) {
       const eastConfWinners = Object.entries(predictions.semifinals)
         .filter(([key, value]) => key.startsWith('east') && value.winner)
         .map(([, value]) => value.winner);
@@ -89,7 +122,7 @@ const NBAPlayoffPredictor = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userData, predictions }),
+        body: JSON.stringify({ userData, predictions, playInSelections }),
       });
       if (!response.ok) {
         const errorText = await response.text();
@@ -163,10 +196,10 @@ const NBAPlayoffPredictor = () => {
           <div className="w-full bg-gray-200 rounded-full h-3">
             <div 
               className="bg-blue-600 h-3 rounded-full transition-all duration-300" 
-              style={{ width: `${(step / 6) * 100}%` }}
+              style={{ width: `${(step / 7) * 100}%` }}
             ></div>
           </div>
-          <p className="text-sm text-gray-600 mt-1">Step {step} of 6</p>
+          <p className="text-sm text-gray-600 mt-1">Step {step} of 7</p>
         </div>
 
         {step === 1 && (
@@ -213,6 +246,98 @@ const NBAPlayoffPredictor = () => {
         )}
 
         {step === 2 && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Play-In Tournament Selection</h2>
+
+            <div>
+              <h3 className="font-semibold text-gray-700 mb-2">Eastern Conference Play-In:</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-gray-600 mb-1">Select No. 7 Seed:</label>
+                  <select
+                    className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500"
+                    value={playInSelections.east.seven}
+                    onChange={(e) => handlePlayInSelection('east', 'seven', e.target.value)}
+                  >
+                    <option value="">Choose Team</option>
+                    {eastPlayInTeams.map(team => (
+                      <option key={team} value={team}>{team}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-gray-600 mb-1">Select No. 8 Seed:</label>
+                  <select
+                    className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500"
+                    value={playInSelections.east.eight}
+                    onChange={(e) => handlePlayInSelection('east', 'eight', e.target.value)}
+                  >
+                    <option value="">Choose Team</option>
+                    {eastPlayInTeams
+                      .filter(team => team !== playInSelections.east.seven)
+                      .map(team => (
+                        <option key={team} value={team}>{team}</option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-700 mb-2">Western Conference Play-In:</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-gray-600 mb-1">Select No. 7 Seed:</label>
+                  <select
+                    className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500"
+                    value={playInSelections.west.seven}
+                    onChange={(e) => handlePlayInSelection('west', 'seven', e.target.value)}
+                  >
+                    <option value="">Choose Team</option>
+                    {westPlayInTeams.map(team => (
+                      <option key={team} value={team}>{team}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-gray-600 mb-1">Select No. 8 Seed:</label>
+                  <select
+                    className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500"
+                    value={playInSelections.west.eight}
+                    onChange={(e) => handlePlayInSelection('west', 'eight', e.target.value)}
+                  >
+                    <option value="">Choose Team</option>
+                    {westPlayInTeams
+                      .filter(team => team !== playInSelections.west.seven)
+                      .map(team => (
+                        <option key={team} value={team}>{team}</option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4 mt-6">
+              <button 
+                onClick={() => setStep(1)}
+                className="flex-1 p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
+              >
+                Previous
+              </button>
+              <button 
+                onClick={() => {
+                  if (validatePlayIn()) setStep(3);
+                  else setError('Please select unique No. 7 and No. 8 seeds for both conferences');
+                }}
+                className="flex-1 p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
           <div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">First Round</h2>
             <h3 className="font-semibold text-gray-700 mb-2">Eastern Conference</h3>
@@ -237,14 +362,14 @@ const NBAPlayoffPredictor = () => {
             ))}
             <div className="flex gap-4 mt-6">
               <button 
-                onClick={() => setStep(1)}
+                onClick={() => setStep(2)}
                 className="flex-1 p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
               >
                 Previous
               </button>
               <button 
                 onClick={() => {
-                  if (validateRound('firstRound')) setStep(3);
+                  if (validateRound('firstRound')) setStep(4);
                   else setError('Please complete all First Round predictions');
                 }}
                 className="flex-1 p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
@@ -255,7 +380,7 @@ const NBAPlayoffPredictor = () => {
           </div>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Conference Semifinals</h2>
             <h3 className="font-semibold text-gray-700 mb-2">Eastern Conference</h3>
@@ -288,14 +413,14 @@ const NBAPlayoffPredictor = () => {
             )}
             <div className="flex gap-4 mt-6">
               <button 
-                onClick={() => setStep(2)}
+                onClick={() => setStep(3)}
                 className="flex-1 p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
               >
                 Previous
               </button>
               <button 
                 onClick={() => {
-                  if (validateRound('semifinals')) setStep(4);
+                  if (validateRound('semifinals')) setStep(5);
                   else setError('Please complete all Semifinals predictions');
                 }}
                 className="flex-1 p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
@@ -306,7 +431,7 @@ const NBAPlayoffPredictor = () => {
           </div>
         )}
 
-        {step === 4 && (
+        {step === 5 && (
           <div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Conference Finals</h2>
             <h3 className="font-semibold text-gray-700 mb-2">Eastern Conference</h3>
@@ -325,14 +450,14 @@ const NBAPlayoffPredictor = () => {
             />
             <div className="flex gap-4 mt-6">
               <button 
-                onClick={() => setStep(3)}
+                onClick={() => setStep(4)}
                 className="flex-1 p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
               >
                 Previous
               </button>
               <button 
                 onClick={() => {
-                  if (validateRound('conferenceFinals')) setStep(5);
+                  if (validateRound('conferenceFinals')) setStep(6);
                   else setError('Please complete all Conference Finals predictions');
                 }}
                 className="flex-1 p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
@@ -343,7 +468,7 @@ const NBAPlayoffPredictor = () => {
           </div>
         )}
 
-        {step === 5 && (
+        {step === 6 && (
           <div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">NBA Finals</h2>
             <Matchup 
@@ -367,7 +492,7 @@ const NBAPlayoffPredictor = () => {
             </select>
             <div className="flex gap-4 mt-6">
               <button 
-                onClick={() => setStep(4)}
+                onClick={() => setStep(5)}
                 className="flex-1 p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
               >
                 Previous
@@ -378,7 +503,7 @@ const NBAPlayoffPredictor = () => {
                       predictions.finals.finals?.games && 
                       predictions.finals.finals?.mvp) {
                     await saveResultsToDatabase();
-                    if (!error) setStep(6);
+                    if (!error) setStep(7);
                   } else {
                     setError('Please complete all Finals predictions');
                   }
@@ -392,7 +517,7 @@ const NBAPlayoffPredictor = () => {
           </div>
         )}
 
-        {step === 6 && (
+        {step === 7 && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Prediction Summary - {userData.name}</h2>
 
@@ -410,14 +535,14 @@ const NBAPlayoffPredictor = () => {
                   </div>
                 </div>
                 <div>
-                  <span className="font-bold">********Semifinals:**********</span>
+                  <span className="font-bold">Semifinals:</span>
                   <div className="pl-8 space-y-1">
                     <div>{predictions.semifinals['east-semi-0']?.winner} ({predictions.semifinals['east-semi-0']?.games})</div>
                     <div>{predictions.semifinals['east-semi-1']?.winner} ({predictions.semifinals['east-semi-1']?.games})</div>
                   </div>
                 </div>
                 <div>
-                  <span className="font-bold">***************Conference Final:**************</span>
+                  <span className="font-bold">Conference Final:</span>
                   <div className="pl-12 space-y-1">
                     <div>{predictions.conferenceFinals['east-final']?.winner} ({predictions.conferenceFinals['east-final']?.games})</div>
                   </div>
@@ -439,14 +564,14 @@ const NBAPlayoffPredictor = () => {
                   </div>
                 </div>
                 <div>
-                  <span className="font-bold">***** Semifinals:*****</span>
+                  <span className="font-bold">Semifinals:</span>
                   <div className="pl-8 space-y-1">
                     <div>{predictions.semifinals['west-semi-0']?.winner} ({predictions.semifinals['west-semi-0']?.games})</div>
                     <div>{predictions.semifinals['west-semi-1']?.winner} ({predictions.semifinals['west-semi-1']?.games})</div>
                   </div>
                 </div>
                 <div>
-                  <span className="font-bold">*****************Conference Final:*************</span>
+                  <span className="font-bold">Conference Final:</span>
                   <div className="pl-12 space-y-1">
                     <div>{predictions.conferenceFinals['west-final']?.winner} ({predictions.conferenceFinals['west-final']?.games})</div>
                   </div>
