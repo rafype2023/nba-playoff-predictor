@@ -24,7 +24,15 @@ const NBAPlayoffPredictor = () => {
   // Play-in team pools
   const eastPlayInTeams = ['Magic', 'Pistons', 'Hawks', 'Wizards'];
   const westPlayInTeams = ['Rockets', 'Pelicans', 'Spurs', 'Timberwolves'];
-  const mvpOptions = ['De Andre Hunter', 'Ty Jerome', 'Jaylen Brown', 'Jayson Tatum', 'Jalen Brunson', 'Karl-Anthony Towns', 'Giannis Antetokounmpo', 'Damian Lillard', 'Tyrese Haliburton', 'Bennedict Mathurin', 'Cade Cunningham', 'Jaden Ivey', 'Jimmy Butler', 'Bam Adebayo', 'Paolo Banchero', 'Franz Wagner', 'Shai Gilgeous-Alexander', 'Josh Giddey', 'LeBron James', 'Luka Dončić', 'Nikola Jokić', 'Jamal Murray', 'Ja Morant', 'Jaren Jackson Jr.', 'Jalen Green', 'Jabari Smith Jr.', 'Kawhi Leonard', 'Paul George', 'Stephen Curry', 'Jimmy Butler'];
+  const mvpOptions = [
+    'De Andre Hunter', 'Ty Jerome', 'Jaylen Brown', 'Jayson Tatum', 'Jalen Brunson', 
+    'Karl-Anthony Towns', 'Giannis Antetokounmpo', 'Damian Lillard', 'Tyrese Haliburton', 
+    'Bennedict Mathurin', 'Cade Cunningham', 'Jaden Ivey', 'Jimmy Butler', 'Bam Adebayo', 
+    'Paolo Banchero', 'Franz Wagner', 'Shai Gilgeous-Alexander', 'Josh Giddey', 
+    'LeBron James', 'Luka Dončić', 'Nikola Jokić', 'Jamal Murray', 'Ja Morant', 
+    'Jaren Jackson Jr.', 'Jalen Green', 'Jabari Smith Jr.', 'Kawhi Leonard', 
+    'Paul George', 'Stephen Curry', 'Jimmy Butler'
+  ];
 
   // Dynamically updated full team lists after play-in selection
   const eastTeams = [...eastSeeds, playInSelections.east.seven, playInSelections.east.eight];
@@ -203,46 +211,66 @@ const NBAPlayoffPredictor = () => {
         </div>
 
         {step === 1 && (
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            if (!validateEmail(userData.email)) {
-              setError('Invalid email format');
-              return;
-            }
-            if (!userData.name || !userData.phone) {
-              setError('All fields are required');
-              return;
-            }
-            setError('');
-            setStep(2);
-          }} className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-800">Registration</h2>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            <input
-              type="text"
-              placeholder="Name"
-              value={userData.name}
-              onChange={(e) => setUserData({ ...userData, name: e.target.value })}
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              value={userData.email}
-              onChange={(e) => setUserData({ ...userData, email: e.target.value })}
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="tel"
-              placeholder="Phone"
-              value={userData.phone}
-              onChange={(e) => setUserData({ ...userData, phone: e.target.value })}
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-            />
-            <button type="submit" className="w-full p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
-              Next
-            </button>
-          </form>
+          <div className="space-y-6">
+            {/* Welcome Message */}
+            <div className="text-center space-y-4">
+              <div className="bg-gray-200 w-48 h-16 mx-auto rounded flex items-center justify-center text-gray-600 font-bold">
+                NBA POOL 2025 Logo
+              </div>
+              <h1 className="text-3xl font-bold text-gray-800">Welcome to the NBA Playoff Pool 2025!</h1>
+              <div className="text-left max-w-md mx-auto">
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Scoring Rules:</h3>
+                <ul className="list-disc pl-5 text-gray-600 space-y-1">
+                  <li>First Round: 1 pt for winner, 1 pt for games (max 2 per matchup)</li>
+                  <li>Semifinals: 2 pts for winner, 1 pt for games (max 3 per matchup)</li>
+                  <li>Conference Finals: 3 pts for winner, 1 pt for games (max 4 per matchup)</li>
+                  <li>Finals: 4 pts for winner, 1 pt for games, 1 pt for MVP (max 6)</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Registration Form */}
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (!validateEmail(userData.email)) {
+                setError('Invalid email format');
+                return;
+              }
+              if (!userData.name || !userData.phone) {
+                setError('All fields are required');
+                return;
+              }
+              setError('');
+              setStep(2);
+            }} className="space-y-4">
+              <h2 className="text-2xl font-bold text-gray-800">Registration</h2>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+              <input
+                type="text"
+                placeholder="Name"
+                value={userData.name}
+                onChange={(e) => setUserData({ ...userData, name: e.target.value })}
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={userData.email}
+                onChange={(e) => setUserData({ ...userData, email: e.target.value })}
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="tel"
+                placeholder="Phone"
+                value={userData.phone}
+                onChange={(e) => setUserData({ ...userData, phone: e.target.value })}
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <button type="submit" className="w-full p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                Next
+              </button>
+            </form>
+          </div>
         )}
 
         {step === 2 && (
@@ -535,14 +563,14 @@ const NBAPlayoffPredictor = () => {
                   </div>
                 </div>
                 <div>
-                  <span className="font-bold">**Semifinals:**</span>
+                  <span className="font-bold">Semifinals:</span>
                   <div className="pl-8 space-y-1">
                     <div>{predictions.semifinals['east-semi-0']?.winner} ({predictions.semifinals['east-semi-0']?.games})</div>
                     <div>{predictions.semifinals['east-semi-1']?.winner} ({predictions.semifinals['east-semi-1']?.games})</div>
                   </div>
                 </div>
                 <div>
-                  <span className="font-bold">***Conference Final:***</span>
+                  <span className="font-bold">Conference Final:</span>
                   <div className="pl-12 space-y-1">
                     <div>{predictions.conferenceFinals['east-final']?.winner} ({predictions.conferenceFinals['east-final']?.games})</div>
                   </div>
@@ -564,14 +592,14 @@ const NBAPlayoffPredictor = () => {
                   </div>
                 </div>
                 <div>
-                  <span className="font-bold">**Semifinals:**</span>
+                  <span className="font-bold">Semifinals:</span>
                   <div className="pl-8 space-y-1">
                     <div>{predictions.semifinals['west-semi-0']?.winner} ({predictions.semifinals['west-semi-0']?.games})</div>
                     <div>{predictions.semifinals['west-semi-1']?.winner} ({predictions.semifinals['west-semi-1']?.games})</div>
                   </div>
                 </div>
                 <div>
-                  <span className="font-bold">***Conference Final:***</span>
+                  <span className="font-bold">Conference Final:</span>
                   <div className="pl-12 space-y-1">
                     <div>{predictions.conferenceFinals['west-final']?.winner} ({predictions.conferenceFinals['west-final']?.games})</div>
                   </div>
