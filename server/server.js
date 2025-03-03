@@ -70,6 +70,7 @@ app.post('/api/results', async (req, res) => {
 });
 
 // New Endpoint: Calculate Scores
+
 app.get('/api/scores', async (req, res) => {
   try {
     const predictions = await Prediction.find();
@@ -88,18 +89,19 @@ app.get('/api/scores', async (req, res) => {
 
     const scores = predictions.map(prediction => {
       let score = 0;
+      const predRounds = prediction.predictions || {}; // Use predictions field
       console.log(`Processing prediction for ${prediction.userData?.name || 'Unknown'}:`, JSON.stringify(prediction, null, 2));
 
       // First Round (1 point for winner, 1 for games)
-      if (prediction.firstRound && results.firstRound) {
-        for (const key in prediction.firstRound) {
-          console.log(`Comparing First Round ${key}: Pred ${JSON.stringify(prediction.firstRound[key])}, Res ${JSON.stringify(results.firstRound[key])}`);
+      if (predRounds.firstRound && results.firstRound) {
+        for (const key in predRounds.firstRound) {
+          console.log(`Comparing First Round ${key}: Pred ${JSON.stringify(predRounds.firstRound[key])}, Res ${JSON.stringify(results.firstRound[key])}`);
           if (results.firstRound[key]) {
-            if (prediction.firstRound[key].winner === results.firstRound[key].winner) {
+            if (predRounds.firstRound[key].winner === results.firstRound[key].winner) {
               score += 1;
               console.log(`First Round winner match for ${key}: +1 point`);
             }
-            if (prediction.firstRound[key].games === results.firstRound[key].games) {
+            if (predRounds.firstRound[key].games === results.firstRound[key].games) {
               score += 1;
               console.log(`First Round games match for ${key}: +1 point`);
             }
@@ -108,15 +110,15 @@ app.get('/api/scores', async (req, res) => {
       }
 
       // Semifinals (2 points for winner, 1 for games)
-      if (prediction.semifinals && results.semifinals) {
-        for (const key in prediction.semifinals) {
-          console.log(`Comparing Semifinals ${key}: Pred ${JSON.stringify(prediction.semifinals[key])}, Res ${JSON.stringify(results.semifinals[key])}`);
+      if (predRounds.semifinals && results.semifinals) {
+        for (const key in predRounds.semifinals) {
+          console.log(`Comparing Semifinals ${key}: Pred ${JSON.stringify(predRounds.semifinals[key])}, Res ${JSON.stringify(results.semifinals[key])}`);
           if (results.semifinals[key]) {
-            if (prediction.semifinals[key].winner === results.semifinals[key].winner) {
+            if (predRounds.semifinals[key].winner === results.semifinals[key].winner) {
               score += 2;
               console.log(`Semifinals winner match for ${key}: +2 points`);
             }
-            if (prediction.semifinals[key].games === results.semifinals[key].games) {
+            if (predRounds.semifinals[key].games === results.semifinals[key].games) {
               score += 1;
               console.log(`Semifinals games match for ${key}: +1 point`);
             }
@@ -125,15 +127,15 @@ app.get('/api/scores', async (req, res) => {
       }
 
       // Conference Finals (3 points for winner, 1 for games)
-      if (prediction.conferenceFinals && results.conferenceFinals) {
-        for (const key in prediction.conferenceFinals) {
-          console.log(`Comparing Conference Finals ${key}: Pred ${JSON.stringify(prediction.conferenceFinals[key])}, Res ${JSON.stringify(results.conferenceFinals[key])}`);
+      if (predRounds.conferenceFinals && results.conferenceFinals) {
+        for (const key in predRounds.conferenceFinals) {
+          console.log(`Comparing Conference Finals ${key}: Pred ${JSON.stringify(predRounds.conferenceFinals[key])}, Res ${JSON.stringify(results.conferenceFinals[key])}`);
           if (results.conferenceFinals[key]) {
-            if (prediction.conferenceFinals[key].winner === results.conferenceFinals[key].winner) {
+            if (predRounds.conferenceFinals[key].winner === results.conferenceFinals[key].winner) {
               score += 3;
               console.log(`Conference Finals winner match for ${key}: +3 points`);
             }
-            if (prediction.conferenceFinals[key].games === results.conferenceFinals[key].games) {
+            if (predRounds.conferenceFinals[key].games === results.conferenceFinals[key].games) {
               score += 1;
               console.log(`Conference Finals games match for ${key}: +1 point`);
             }
@@ -142,7 +144,7 @@ app.get('/api/scores', async (req, res) => {
       }
 
       // Finals (4 points for winner, 1 for games, 1 for MVP)
-      const predFinals = prediction.finals || {};
+      const predFinals = predRounds.finals || {};
       const resFinals = results.finals || {};
       const predFinalsData = predFinals.finals || {};
       const resFinalsData = resFinals.finals || {};
@@ -172,7 +174,7 @@ app.get('/api/scores', async (req, res) => {
     console.error('Error calculating scores:', error.stack);
     res.status(500).json({ error: 'Failed to calculate scores', details: error.message });
   }
-});         
+});
 
 // Start Server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
