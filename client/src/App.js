@@ -158,7 +158,7 @@ const NBAPlayoffPredictor = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-lg">
+      <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-lg">
         <div className="mb-6">
           <div className="w-full bg-gray-200 rounded-full h-3">
             <div 
@@ -393,16 +393,119 @@ const NBAPlayoffPredictor = () => {
         )}
 
         {step === 6 && (
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Prediction Summary</h2>
-            <pre className="bg-gray-100 p-4 rounded overflow-auto text-sm">
-              {JSON.stringify({ userData, predictions }, null, 2)}
-            </pre>
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Prediction Summary - {userData.name}</h2>
+            <div className="grid grid-cols-2 gap-8">
+              {/* Eastern Conference Bracket */}
+              <div>
+                <h3 className="text-xl font-semibold text-gray-700 mb-4">Eastern Conference</h3>
+                <div className="space-y-4">
+                  {/* First Round */}
+                  <div>
+                    <div className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                      <span>{eastTeams[0]} vs {eastTeams[7]}</span>
+                      <span className="font-medium">{predictions.firstRound['east-0']?.winner} ({predictions.firstRound['east-0']?.games})</span>
+                    </div>
+                    <div className="flex justify-between items-center bg-gray-100 p-2 rounded mt-2">
+                      <span>{eastTeams[1]} vs {eastTeams[6]}</span>
+                      <span className="font-medium">{predictions.firstRound['east-1']?.winner} ({predictions.firstRound['east-1']?.games})</span>
+                    </div>
+                  </div>
+                  <div className="border-l-2 border-gray-300 pl-4">
+                    <div className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                      <span>Semi 1</span>
+                      <span className="font-medium">{predictions.semifinals['east-semi-0']?.winner} ({predictions.semifinals['east-semi-0']?.games})</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                      <span>{eastTeams[2]} vs {eastTeams[5]}</span>
+                      <span className="font-medium">{predictions.firstRound['east-2']?.winner} ({predictions.firstRound['east-2']?.games})</span>
+                    </div>
+                    <div className="flex justify-between items-center bg-gray-100 p-2 rounded mt-2">
+                      <span>{eastTeams[3]} vs {eastTeams[4]}</span>
+                      <span className="font-medium">{predictions.firstRound['east-3']?.winner} ({predictions.firstRound['east-3']?.games})</span>
+                    </div>
+                  </div>
+                  <div className="border-l-2 border-gray-300 pl-4">
+                    <div className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                      <span>Semi 2</span>
+                      <span className="font-medium">{predictions.semifinals['east-semi-1']?.winner} ({predictions.semifinals['east-semi-1']?.games})</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="border-l-2 border-gray-300 pl-4 mt-4">
+                  <div className="flex justify-between items-center bg-gray-200 p-2 rounded">
+                    <span>Conference Final</span>
+                    <span className="font-medium">{predictions.conferenceFinals['east-final']?.winner} ({predictions.conferenceFinals['east-final']?.games})</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Western Conference Bracket */}
+              <div>
+                <h3 className="text-xl font-semibold text-gray-700 mb-4">Western Conference</h3>
+                <div className="space-y-4">
+                  {/* First Round */}
+                  <div>
+                    <div className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                      <span>{westTeams[0]} vs {westTeams[7]}</span>
+                      <span className="font-medium">{predictions.firstRound['west-0']?.winner} ({predictions.firstRound['west-0']?.games})</span>
+                    </div>
+                    <div className="flex justify-between items-center bg-gray-100 p-2 rounded mt-2">
+                      <span>{westTeams[1]} vs {westTeams[6]}</span>
+                      <span className="font-medium">{predictions.firstRound['west-1']?.winner} ({predictions.firstRound['west-1']?.games})</span>
+                    </div>
+                  </div>
+                  <div className="border-l-2 border-gray-300 pl-4">
+                    <div className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                      <span>Semi 1</span>
+                      <span className="font-medium">{predictions.semifinals['west-semi-0']?.winner} ({predictions.semifinals['west-semi-0']?.games})</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                      <span>{westTeams[2]} vs {westTeams[5]}</span>
+                      <span className="font-medium">{predictions.firstRound['west-2']?.winner} ({predictions.firstRound['west-2']?.games})</span>
+                    </div>
+                    <div className="flex justify-between items-center bg-gray-100 p-2 rounded mt-2">
+                      <span>{westTeams[3]} vs {westTeams[4]}</span>
+                      <span className="font-medium">{predictions.firstRound['west-3']?.winner} ({predictions.firstRound['west-3']?.games})</span>
+                    </div>
+                  </div>
+                  <div className="border-l-2 border-gray-300 pl-4">
+                    <div className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                      <span>Semi 2</span>
+                      <span className="font-medium">{predictions.semifinals['west-semi-1']?.winner} ({predictions.semifinals['west-semi-1']?.games})</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="border-l-2 border-gray-300 pl-4 mt-4">
+                  <div className="flex justify-between items-center bg-gray-200 p-2 rounded">
+                    <span>Conference Final</span>
+                    <span className="font-medium">{predictions.conferenceFinals['west-final']?.winner} ({predictions.conferenceFinals['west-final']?.games})</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Finals */}
+            <div className="mt-6 text-center">
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">NBA Finals</h3>
+              <div className="inline-flex items-center bg-gray-300 p-4 rounded-lg">
+                <span className="font-medium">{predictions.conferenceFinals['east-final']?.winner}</span>
+                <span className="mx-4 text-gray-500">vs</span>
+                <span className="font-medium">{predictions.conferenceFinals['west-final']?.winner}</span>
+                <span className="ml-4 font-bold">{predictions.finals.finals?.winner} ({predictions.finals.finals?.games})</span>
+              </div>
+              <p className="mt-2 text-gray-600">Finals MVP: <span className="font-medium">{predictions.finals.finals?.mvp}</span></p>
+            </div>
+
             <button 
               onClick={() => setStep(1)}
-              className="w-full p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors mt-4"
+              className="w-full p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors mt-6"
             >
-              Start Over
+              Thanks
             </button>
           </div>
         )}
