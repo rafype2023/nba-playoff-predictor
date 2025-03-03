@@ -22,7 +22,7 @@ const NBAPlayoffPredictor = () => {
   const eastSeeds = ['Celtics', 'Bucks', 'Pacers', 'Heat', 'Knicks', 'Cavaliers'];
   const westSeeds = ['Nuggets', 'Suns', 'Warriors', 'Lakers', 'Clippers', 'Grizzlies'];
   // Play-in team pools
-  const eastPlayInTeams = ['Magic', 'Pistons', 'Pacers', 'Wizards'];
+  const eastPlayInTeams = ['Magic', 'Pistons', 'Hawks', 'Wizards'];
   const westPlayInTeams = ['Rockets', 'Pelicans', 'Spurs', 'Timberwolves'];
   const mvpOptions = ['De Andre Hunter', 'Ty Jerome', 'Jaylen Brown', 'Jayson Tatum', 'Jalen Brunson', 'Karl-Anthony Towns', 'Giannis Antetokounmpo', 'Damian Lillard', 'Tyrese Haliburton', 'Bennedict Mathurin', 'Cade Cunningham', 'Jaden Ivey', 'Jimmy Butler', 'Bam Adebayo', 'Paolo Banchero', 'Franz Wagner', 'Shai Gilgeous-Alexander', 'Josh Giddey', 'LeBron James', 'Luka Dončić', 'Nikola Jokić', 'Jamal Murray', 'Ja Morant', 'Jaren Jackson Jr.', 'Jalen Green', 'Jabari Smith Jr.', 'Kawhi Leonard', 'Paul George', 'Stephen Curry', 'Jimmy Butler'];
 
