@@ -1,16 +1,15 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const bodyParser = require('body-parser'); // If you're using body-parser as per your package.json
+const bodyParser = require('body-parser');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json()); // Using body-parser instead of express.json() if listed in package.json
-// Alternatively, if not using body-parser, use:
-// app.use(express.json());
+app.use(bodyParser.json());
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)
@@ -24,7 +23,8 @@ const predictionSchema = new mongoose.Schema({
     email: String,
     phone: String,
   },
-  predictions: Object, // Original schema might differ; adjust if needed
+  predictions: Object,
+  playInSelections: Object,
   firstRound: Object,
   semifinals: Object,
   conferenceFinals: Object,
@@ -43,11 +43,78 @@ const resultSchema = new mongoose.Schema({
 });
 const Result = mongoose.model('Result', resultSchema, 'results');
 
+// Email Configuration with Nodemailer
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'Poolnba00@gmail.com',
+    pass: 'wdtvkhmlfjguyrsb' // Replace with the 16-character code after generating
+  }
+});
+
+// Format predictions for email
+const formatPredictionsForEmail = (userData, predictions, playInSelections) => {
+  return `
+    <h2>NBA Playoff Pool 2025 Predictions for ${userData.name}</h2>
+    <p>Email: ${userData.email}</p>
+    <p>Phone: ${userData.phone}</p>
+    
+    <h3>Play-In Selections:</h3>
+    <p><strong>Eastern Conference:</strong></p>
+    <ul>
+      <li>No. 7 Seed: ${playInSelections?.east?.seven || 'N/A'}</li>
+      <li>No. 8 Seed: ${playInSelections?.east?.eight || 'N/A'}</li>
+    </ul>
+    <p><strong>Western Conference:</strong></p>
+    <ul>
+      <li>No. 7 Seed: ${playInSelections?.west?.seven || 'N/A'}</li>
+      <li>No. 8 Seed: ${playInSelections?.west?.eight || 'N/A'}</li>
+    </ul>
+
+    <h3>Eastern Conference:</h3>
+    <p><strong>First Round:</strong></p>
+    <ul>
+      ${Object.keys(predictions.firstRound || {}).filter(k => k.startsWith('east')).map(k => `<li>${predictions.firstRound[k].winner} (${predictions.firstRound[k].games})</li>`).join('')}
+    </ul>
+    <p><strong>Semifinals:</strong></p>
+    <ul>
+      ${Object.keys(predictions.semifinals || {}).filter(k => k.startsWith('east')).map(k => `<li>${predictions.semifinals[k].winner} (${predictions.semifinals[k].games})</li>`).join('')}
+    </ul>
+    <p><strong>Conference Final:</strong></p>
+    <ul>
+      <li>${predictions.conferenceFinals?.['east-final']?.winner || 'N/A'} (${predictions.conferenceFinals?.['east-final']?.games || 'N/A'})</li>
+    </ul>
+
+    <h3>Western Conference:</h3>
+    <p><strong>First Round:</strong></p>
+    <ul>
+      ${Object.keys(predictions.firstRound || {}).filter(k => k.startsWith('west')).map(k => `<li>${predictions.firstRound[k].winner} (${predictions.firstRound[k].games})</li>`).join('')}
+    </ul>
+    <p><strong>Semifinals:</strong></p>
+    <ul>
+      ${Object.keys(predictions.semifinals || {}).filter(k => k.startsWith('west')).map(k => `<li>${predictions.semifinals[k].winner} (${predictions.semifinals[k].games})</li>`).join('')}
+    </ul>
+    <p><strong>Conference Final:</strong></p>
+    <ul>
+      <li>${predictions.conferenceFinals?.['west-final']?.winner || 'N/A'} (${predictions.conferenceFinals?.['west-final']?.games || 'N/A'})</li>
+    </ul>
+
+    <h3>Finals:</h3>
+    <p>${predictions.conferenceFinals?.['east-final']?.winner || 'N/A'} vs ${predictions.conferenceFinals?.['west-final']?.winner || 'N/A'}</p>
+    <ul>
+      <li>Winner: ${predictions.finals?.finals?.winner || 'N/A'} (${predictions.finals?.finals?.games || 'N/A'})</li>
+      <li>MVP: ${predictions.finals?.finals?.mvp || 'N/A'}</li>
+    </ul>
+
+    <p>Thanks for participating in the NBA Playoff Pool 2025!</p>
+  `;
+};
+
 // Existing Endpoint: Save Predictions
 app.post('/api/predictions', async (req, res) => {
   try {
-    const { userData, predictions } = req.body;
-    const newPrediction = new Prediction({ userData, predictions });
+    const { userData, predictions, playInSelections } = req.body;
+    const newPrediction = new Prediction({ userData, predictions, playInSelections });
     await newPrediction.save();
     res.status(201).json({ message: 'Prediction saved', id: newPrediction._id });
   } catch (error) {
@@ -69,8 +136,7 @@ app.post('/api/results', async (req, res) => {
   }
 });
 
-// New Endpoint: Calculate Scores
-
+// Existing Endpoint: Calculate Scores
 app.get('/api/scores', async (req, res) => {
   try {
     const predictions = await Prediction.find();
@@ -100,7 +166,6 @@ app.get('/api/scores', async (req, res) => {
         finals: []
       };
 
-      // First Round (1 point for winner, 1 for games)
       if (predRounds.firstRound && results.firstRound) {
         for (const key in predRounds.firstRound) {
           const pred = predRounds.firstRound[key] || {};
@@ -122,7 +187,6 @@ app.get('/api/scores', async (req, res) => {
         }
       }
 
-      // Semifinals (2 points for winner, 1 for games)
       if (predRounds.semifinals && results.semifinals) {
         for (const key in predRounds.semifinals) {
           const pred = predRounds.semifinals[key] || {};
@@ -144,7 +208,6 @@ app.get('/api/scores', async (req, res) => {
         }
       }
 
-      // Conference Finals (3 points for winner, 1 for games)
       if (predRounds.conferenceFinals && results.conferenceFinals) {
         for (const key in predRounds.conferenceFinals) {
           const pred = predRounds.conferenceFinals[key] || {};
@@ -166,7 +229,6 @@ app.get('/api/scores', async (req, res) => {
         }
       }
 
-      // Finals (4 points for winner, 1 for games, 1 for MVP)
       const predFinals = predRounds.finals || {};
       const resFinals = results.finals || {};
       const predFinalsData = predFinals.finals || {};
@@ -199,6 +261,27 @@ app.get('/api/scores', async (req, res) => {
   } catch (error) {
     console.error('Error calculating scores:', error.stack);
     res.status(500).json({ error: 'Failed to calculate scores', details: error.message });
+  }
+});
+
+// New Endpoint: Send Email
+app.post('/api/send-email', async (req, res) => {
+  const { userData, predictions, playInSelections } = req.body;
+
+  const mailOptions = {
+    from: 'Poolnba00@gmail.com',
+    to: userData.email,
+    subject: 'Your NBA Playoff Pool 2025 Predictions',
+    html: formatPredictionsForEmail(userData, predictions, playInSelections)
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`Email sent to ${userData.email}`);
+    res.status(200).json({ message: 'Email sent successfully' });
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).json({ error: 'Failed to send email', details: error.message });
   }
 });
 
