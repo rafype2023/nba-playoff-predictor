@@ -410,14 +410,14 @@ const NBAPlayoffPredictor = () => {
                   </div>
                 </div>
                 <div>
-                  <span className="font-bold">Semifinals:</span>
+                  <span className="font-bold">********Semifinals:**********</span>
                   <div className="pl-8 space-y-1">
                     <div>{predictions.semifinals['east-semi-0']?.winner} ({predictions.semifinals['east-semi-0']?.games})</div>
                     <div>{predictions.semifinals['east-semi-1']?.winner} ({predictions.semifinals['east-semi-1']?.games})</div>
                   </div>
                 </div>
                 <div>
-                  <span className="font-bold">Conference Final:</span>
+                  <span className="font-bold">***************Conference Final:**************</span>
                   <div className="pl-12 space-y-1">
                     <div>{predictions.conferenceFinals['east-final']?.winner} ({predictions.conferenceFinals['east-final']?.games})</div>
                   </div>
