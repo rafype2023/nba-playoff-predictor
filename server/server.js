@@ -84,56 +84,80 @@ app.get('/api/scores', async (req, res) => {
       return res.status(404).json({ error: 'No results found' });
     }
 
+    console.log('Results:', JSON.stringify(results, null, 2));
+
     const scores = predictions.map(prediction => {
       let score = 0;
+      console.log(`Processing prediction for ${prediction.userData?.name || 'Unknown'}:`, JSON.stringify(prediction, null, 2));
 
-      // First Round
+      // First Round (1 point for winner, 1 for games)
       if (prediction.firstRound && results.firstRound) {
         for (const key in prediction.firstRound) {
-          if (results.firstRound[key] && 
-              prediction.firstRound[key].winner === results.firstRound[key].winner && 
-              prediction.firstRound[key].games === results.firstRound[key].games) {
-            score += 1;
+          if (results.firstRound[key]) {
+            if (prediction.firstRound[key].winner === results.firstRound[key].winner) {
+              score += 1;
+              console.log(`First Round winner match for ${key}: +1 point`);
+            }
+            if (prediction.firstRound[key].games === results.firstRound[key].games) {
+              score += 1;
+              console.log(`First Round games match for ${key}: +1 point`);
+            }
           }
         }
       }
 
-      // Semifinals
+      // Semifinals (2 points for winner, 1 for games)
       if (prediction.semifinals && results.semifinals) {
         for (const key in prediction.semifinals) {
-          if (results.semifinals[key] && 
-              prediction.semifinals[key].winner === results.semifinals[key].winner && 
-              prediction.semifinals[key].games === results.semifinals[key].games) {
-            score += 2;
+          if (results.semifinals[key]) {
+            if (prediction.semifinals[key].winner === results.semifinals[key].winner) {
+              score += 2;
+              console.log(`Semifinals winner match for ${key}: +2 points`);
+            }
+            if (prediction.semifinals[key].games === results.semifinals[key].games) {
+              score += 1;
+              console.log(`Semifinals games match for ${key}: +1 point`);
+            }
           }
         }
       }
 
-      // Conference Finals
+      // Conference Finals (3 points for winner, 1 for games)
       if (prediction.conferenceFinals && results.conferenceFinals) {
         for (const key in prediction.conferenceFinals) {
-          if (results.conferenceFinals[key] && 
-              prediction.conferenceFinals[key].winner === results.conferenceFinals[key].winner && 
-              prediction.conferenceFinals[key].games === results.conferenceFinals[key].games) {
-            score += 3;
+          if (results.conferenceFinals[key]) {
+            if (prediction.conferenceFinals[key].winner === results.conferenceFinals[key].winner) {
+              score += 3;
+              console.log(`Conference Finals winner match for ${key}: +3 points`);
+            }
+            if (prediction.conferenceFinals[key].games === results.conferenceFinals[key].games) {
+              score += 1;
+              console.log(`Conference Finals games match for ${key}: +1 point`);
+            }
           }
         }
       }
 
-      // Finals
+      // Finals (4 points for winner, 1 for games, 1 for MVP)
       const predFinals = prediction.finals || {};
       const resFinals = results.finals || {};
       const predFinalsData = predFinals.finals || {};
       const resFinalsData = resFinals.finals || {};
 
       if (predFinalsData.winner && resFinalsData.winner && 
-          predFinalsData.winner === resFinalsData.winner && 
-          predFinalsData.games === resFinalsData.games) {
+          predFinalsData.winner === resFinalsData.winner) {
         score += 4;
+        console.log('Finals winner match: +4 points');
+      }
+      if (predFinalsData.games && resFinalsData.games && 
+          predFinalsData.games === resFinalsData.games) {
+        score += 1;
+        console.log('Finals games match: +1 point');
       }
       if (predFinalsData.mvp && resFinalsData.mvp && 
           predFinalsData.mvp === resFinalsData.mvp) {
         score += 1;
+        console.log('Finals MVP match: +1 point');
       }
 
       return { user: prediction.userData?.name || 'Unknown', score };
