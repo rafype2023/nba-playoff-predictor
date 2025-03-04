@@ -7,57 +7,59 @@ const nodemailer = require('nodemailer');
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Prediction Schema and Model
 const predictionSchema = new mongoose.Schema({
   userData: {
     name: String,
     email: String,
     phone: String,
+    comments: String,
+    paymentMethod: String
   },
   predictions: Object,
   playInSelections: Object,
-  firstRound: Object,
-  semifinals: Object,
-  conferenceFinals: Object,
-  finals: Object,
-  timestamp: { type: Date, default: Date.now },
+  timestamp: { type: Date, default: Date.now }
 });
-const Prediction = mongoose.model('Prediction', predictionSchema, 'predictions');
 
-// Result Schema and Model
 const resultSchema = new mongoose.Schema({
   firstRound: Object,
   semifinals: Object,
   conferenceFinals: Object,
   finals: Object,
-  timestamp: { type: Date, default: Date.now },
+  timestamp: { type: Date, default: Date.now }
 });
+
+const Prediction = mongoose.model('Prediction', predictionSchema, 'predictions');
 const Result = mongoose.model('Result', resultSchema, 'results');
 
-// Email Configuration with Nodemailer
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: 'rafyperez@gmail.com',
-    pass: 'wdtvkhmlfjguyrsb' // Replace with your new 16-character code
+    pass: 'wdtvkhmlfjguyrsb' // Replace with your actual app-specific password
   }
 });
 
-// Format predictions for email
 const formatPredictionsForEmail = (userData, predictions, playInSelections) => {
+  let paymentInstruction = '';
+  if (userData.paymentMethod === 'ATH-Movil') {
+    paymentInstruction = 'Envie Pago al 787-918-1644';
+  } else if (userData.paymentMethod === 'PayPal') {
+    paymentInstruction = 'Envie via PayPal a rafyperez@hotmail.com';
+  } // No instruction for 'Cash'
+
   return `
     <h2>NBA Playoff Pool 2025 Predictions for ${userData.name}</h2>
     <p>Email: ${userData.email}</p>
     <p>Phone: ${userData.phone}</p>
+    <p>Comments: ${userData.comments || 'None'}</p>
+    <p>Payment Method: ${userData.paymentMethod}${paymentInstruction ? ` - ${paymentInstruction}` : ''}</p>
     
     <h3>Play-In Selections:</h3>
     <p><strong>Eastern Conference:</strong></p>
@@ -104,13 +106,14 @@ const formatPredictionsForEmail = (userData, predictions, playInSelections) => {
     <ul>
       <li>Winner: ${predictions.finals?.finals?.winner || 'N/A'} (${predictions.finals?.finals?.games || 'N/A'})</li>
       <li>MVP: ${predictions.finals?.finals?.mvp || 'N/A'}</li>
+      <li>Last Game Score: ${predictions.finals?.finals?.lastGameScore?.team1 || 'N/A'} - ${predictions.finals?.finals?.lastGameScore?.team2 || 'N/A'}</li>
     </ul>
 
     <p>Thanks for participating in the NBA Playoff Pool 2025!</p>
   `;
 };
 
-// Existing Endpoint: Save Predictions
+// Endpoint: Save Predictions
 app.post('/api/predictions', async (req, res) => {
   try {
     const { userData, predictions, playInSelections } = req.body;
@@ -123,7 +126,7 @@ app.post('/api/predictions', async (req, res) => {
   }
 });
 
-// Existing Endpoint: Save Results
+// Endpoint: Save Results
 app.post('/api/results', async (req, res) => {
   try {
     const { firstRound, semifinals, conferenceFinals, finals } = req.body;
@@ -136,7 +139,7 @@ app.post('/api/results', async (req, res) => {
   }
 });
 
-// Existing Endpoint: Calculate Scores
+// Endpoint: Calculate Scores
 app.get('/api/scores', async (req, res) => {
   try {
     const predictions = await Prediction.find();
@@ -264,7 +267,7 @@ app.get('/api/scores', async (req, res) => {
   }
 });
 
-// New Endpoint: Send Email
+// Endpoint: Send Email
 app.post('/api/send-email', async (req, res) => {
   const { userData, predictions, playInSelections } = req.body;
 
