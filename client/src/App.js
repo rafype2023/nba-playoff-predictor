@@ -210,7 +210,7 @@ const NBAPlayoffPredictor = () => {
               </div>
               <h1 className="text-3xl font-bold text-gray-800">Welcome to the NBA Playoff Pool 2025!</h1>
               <div className="text-left max-w-md mx-auto">
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">Scoring Rules:</h3>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2"> Version 1 Scoring Rules:</h3>
                 <ul className="list-disc pl-5 text-gray-600 space-y-1">
                   <li>First Round: 1 pt for winner, 1 pt for games (max 2 per matchup)</li>
                   <li>Semifinals: 2 pts for winner, 1 pt for games (max 3 per matchup)</li>
