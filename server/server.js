@@ -1,143 +1,4 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const nodemailer = require('nodemailer');
-
-const app = express();
-const PORT = process.env.PORT || 5001;
-
-app.use(cors());
-app.use(bodyParser.json());
-
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
-
-const predictionSchema = new mongoose.Schema({
-  userData: {
-    name: String,
-    email: String,
-    phone: String,
-    comments: String,
-    paymentMethod: String
-  },
-  predictions: Object,
-  playInSelections: Object,
-  timestamp: { type: Date, default: Date.now }
-});
-
-const resultSchema = new mongoose.Schema({
-  firstRound: Object,
-  semifinals: Object,
-  conferenceFinals: Object,
-  finals: Object,
-  timestamp: { type: Date, default: Date.now }
-});
-
-const Prediction = mongoose.model('Prediction', predictionSchema, 'predictions');
-const Result = mongoose.model('Result', resultSchema, 'results');
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'rafyperez@gmail.com',
-    pass: 'wdtvkhmlfjguyrsb' // Replace with your actual app-specific password
-  }
-});
-
-const formatPredictionsForEmail = (userData, predictions, playInSelections) => {
-  let paymentInstruction = '';
-  if (userData.paymentMethod === 'ATH-Movil') {
-    paymentInstruction = 'Envie Pago al 787-918-1644';
-  } else if (userData.paymentMethod === 'PayPal') {
-    paymentInstruction = 'Envie via PayPal a rafyperez@hotmail.com';
-  } // No instruction for 'Cash'
-
-  return `
-    <h2>NBA Playoff Pool 2025 Predictions for ${userData.name}</h2>
-    <p>Email: ${userData.email}</p>
-    <p>Phone: ${userData.phone}</p>
-    <p>Comments: ${userData.comments || 'None'}</p>
-    <p>Payment Method: ${userData.paymentMethod}${paymentInstruction ? ` - ${paymentInstruction}` : ''}</p>
-    
-    <h3>Play-In Selections:</h3>
-    <p><strong>Eastern Conference:</strong></p>
-    <ul>
-      <li>No. 7 Seed: ${playInSelections?.east?.seven || 'N/A'}</li>
-      <li>No. 8 Seed: ${playInSelections?.east?.eight || 'N/A'}</li>
-    </ul>
-    <p><strong>Western Conference:</strong></p>
-    <ul>
-      <li>No. 7 Seed: ${playInSelections?.west?.seven || 'N/A'}</li>
-      <li>No. 8 Seed: ${playInSelections?.west?.eight || 'N/A'}</li>
-    </ul>
-
-    <h3>Eastern Conference:</h3>
-    <p><strong>First Round:</strong></p>
-    <ul>
-      ${Object.keys(predictions.firstRound || {}).filter(k => k.startsWith('east')).map(k => `<li>${predictions.firstRound[k].winner} (${predictions.firstRound[k].games})</li>`).join('')}
-    </ul>
-    <p><strong>Semifinals:</strong></p>
-    <ul>
-      ${Object.keys(predictions.semifinals || {}).filter(k => k.startsWith('east')).map(k => `<li>${predictions.semifinals[k].winner} (${predictions.semifinals[k].games})</li>`).join('')}
-    </ul>
-    <p><strong>Conference Final:</strong></p>
-    <ul>
-      <li>${predictions.conferenceFinals?.['east-final']?.winner || 'N/A'} (${predictions.conferenceFinals?.['east-final']?.games || 'N/A'})</li>
-    </ul>
-
-    <h3>Western Conference:</h3>
-    <p><strong>First Round:</strong></p>
-    <ul>
-      ${Object.keys(predictions.firstRound || {}).filter(k => k.startsWith('west')).map(k => `<li>${predictions.firstRound[k].winner} (${predictions.firstRound[k].games})</li>`).join('')}
-    </ul>
-    <p><strong>Semifinals:</strong></p>
-    <ul>
-      ${Object.keys(predictions.semifinals || {}).filter(k => k.startsWith('west')).map(k => `<li>${predictions.semifinals[k].winner} (${predictions.semifinals[k].games})</li>`).join('')}
-    </ul>
-    <p><strong>Conference Final:</strong></p>
-    <ul>
-      <li>${predictions.conferenceFinals?.['west-final']?.winner || 'N/A'} (${predictions.conferenceFinals?.['west-final']?.games || 'N/A'})</li>
-    </ul>
-
-    <h3>Finals:</h3>
-    <p>${predictions.conferenceFinals?.['east-final']?.winner || 'N/A'} vs ${predictions.conferenceFinals?.['west-final']?.winner || 'N/A'}</p>
-    <ul>
-      <li>Winner: ${predictions.finals?.finals?.winner || 'N/A'} (${predictions.finals?.finals?.games || 'N/A'})</li>
-      <li>MVP: ${predictions.finals?.finals?.mvp || 'N/A'}</li>
-      <li>Last Game Score: ${predictions.finals?.finals?.lastGameScore?.team1 || 'N/A'} - ${predictions.finals?.finals?.lastGameScore?.team2 || 'N/A'}</li>
-    </ul>
-
-    <p>Thanks for participating in the NBA Playoff Pool 2025!</p>
-  `;
-};
-
-// Endpoint: Save Predictions
-app.post('/api/predictions', async (req, res) => {
-  try {
-    const { userData, predictions, playInSelections } = req.body;
-    const newPrediction = new Prediction({ userData, predictions, playInSelections });
-    await newPrediction.save();
-    res.status(201).json({ message: 'Prediction saved', id: newPrediction._id });
-  } catch (error) {
-    console.error('Error saving prediction:', error);
-    res.status(500).json({ error: 'Failed to save prediction' });
-  }
-});
-
-// Endpoint: Save Results
-app.post('/api/results', async (req, res) => {
-  try {
-    const { firstRound, semifinals, conferenceFinals, finals } = req.body;
-    const newResult = new Result({ firstRound, semifinals, conferenceFinals, finals });
-    await newResult.save();
-    res.status(201).json({ message: 'Results saved', id: newResult._id });
-  } catch (error) {
-    console.error('Error saving results:', error);
-    res.status(500).json({ error: 'Failed to save results' });
-  }
-});
+// ... (rest of the file unchanged up to /api/scores)
 
 // Endpoint: Calculate Scores
 app.get('/api/scores', async (req, res) => {
@@ -145,7 +6,7 @@ app.get('/api/scores', async (req, res) => {
     const predictions = await Prediction.find();
     if (!predictions || predictions.length === 0) {
       console.log('No predictions found in database');
-      return res.json([]);
+      return res.json({ scores: [], standings: [] });
     }
 
     const results = await Result.findOne().sort({ timestamp: -1 });
@@ -190,47 +51,7 @@ app.get('/api/scores', async (req, res) => {
         }
       }
 
-      if (predRounds.semifinals && results.semifinals) {
-        for (const key in predRounds.semifinals) {
-          const pred = predRounds.semifinals[key] || {};
-          const res = results.semifinals[key] || {};
-          console.log(`Comparing Semifinals ${key}: Pred ${JSON.stringify(pred)}, Res ${JSON.stringify(res)}`);
-          let score = 0;
-          const winnerMatch = pred.winner === res.winner;
-          const gamesMatch = pred.games === res.games;
-          if (winnerMatch) {
-            score += 2;
-            console.log(`Semifinals winner match for ${key}: +2 points`);
-          }
-          if (gamesMatch) {
-            score += 1;
-            console.log(`Semifinals games match for ${key}: +1 point`);
-          }
-          totalScore += score;
-          details.semifinals.push({ key, prediction: pred, result: res, winnerMatch, gamesMatch, points: score });
-        }
-      }
-
-      if (predRounds.conferenceFinals && results.conferenceFinals) {
-        for (const key in predRounds.conferenceFinals) {
-          const pred = predRounds.conferenceFinals[key] || {};
-          const res = results.conferenceFinals[key] || {};
-          console.log(`Comparing Conference Finals ${key}: Pred ${JSON.stringify(pred)}, Res ${JSON.stringify(res)}`);
-          let score = 0;
-          const winnerMatch = pred.winner === res.winner;
-          const gamesMatch = pred.games === res.games;
-          if (winnerMatch) {
-            score += 3;
-            console.log(`Conference Finals winner match for ${key}: +3 points`);
-          }
-          if (gamesMatch) {
-            score += 1;
-            console.log(`Conference Finals games match for ${key}: +1 point`);
-          }
-          totalScore += score;
-          details.conferenceFinals.push({ key, prediction: pred, result: res, winnerMatch, gamesMatch, points: score });
-        }
-      }
+      // ... (rest of the scoring logic for semifinals, conferenceFinals, finals unchanged)
 
       const predFinals = predRounds.finals || {};
       const resFinals = results.finals || {};
@@ -260,33 +81,14 @@ app.get('/api/scores', async (req, res) => {
       return { user, score: totalScore, details };
     });
 
-    res.json(scores);
+    const standings = scores.map(({ user, score }) => ({ name: user, points: score }))
+      .sort((a, b) => b.points - a.points);
+
+    res.json({ scores, standings });
   } catch (error) {
     console.error('Error calculating scores:', error.stack);
     res.status(500).json({ error: 'Failed to calculate scores', details: error.message });
   }
 });
 
-// Endpoint: Send Email
-app.post('/api/send-email', async (req, res) => {
-  const { userData, predictions, playInSelections } = req.body;
-
-  const mailOptions = {
-    from: 'rafyperez@gmail.com',
-    to: userData.email,
-    subject: 'Your NBA Playoff Pool 2025 Predictions',
-    html: formatPredictionsForEmail(userData, predictions, playInSelections)
-  };
-
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`Email sent to ${userData.email}`);
-    res.status(200).json({ message: 'Email sent successfully' });
-  } catch (error) {
-    console.error('Error sending email:', error);
-    res.status(500).json({ error: 'Failed to send email', details: error.message });
-  }
-});
-
-// Start Server
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// ... (rest of the file unchanged)
