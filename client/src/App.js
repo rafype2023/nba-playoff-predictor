@@ -31,7 +31,7 @@ const NBAPlayoffPredictor = () => {
     'Jaren Jackson Jr.', 'Jalen Green', 'Jabari Smith Jr.', 'Kawhi Leonard',
     'Paul George', 'Stephen Curry', 'Jimmy Butler'
   ];
-  const paymentMethods = ['ATH-Movil', 'PayPal', 'Cash']; // Updated from ['Credit Card', 'PayPal', 'Cash']
+  const paymentMethods = ['ATH-Movil', 'PayPal', 'Cash'];
 
   const eastTeams = [...eastSeeds, playInSelections.east.seven, playInSelections.east.eight];
   const westTeams = [...westSeeds, playInSelections.west.seven, playInSelections.west.eight];
@@ -139,53 +139,53 @@ const NBAPlayoffPredictor = () => {
   };
 
   const Matchup = ({ teams, round, matchupId, tooltip }) => (
-    <div className="bg-white p-4 rounded-lg shadow-md mb-6 relative group">
-      <div className="flex items-center justify-between">
+    <div className="bg-white p-4 rounded-lg shadow-md mb-4">
+      <div className="flex items-center justify-center gap-4 mb-4">
         <div className="flex items-center gap-2">
+          <span className="font-medium">{teams[0]}</span>
           <img 
             src={`/${teams[0].toLowerCase()}.png`} 
             alt={`${teams[0]} logo`} 
             className="w-8 h-8" 
             onError={(e) => (e.target.src = '/placeholder-logo.png')}
           />
-          <span className="font-medium">{teams[0]}</span>
         </div>
         <span className="text-gray-500">vs</span>
         <div className="flex items-center gap-2">
-          <span className="font-medium">{teams[1]}</span>
           <img 
             src={`/${teams[1].toLowerCase()}.png`} 
             alt={`${teams[1]} logo`} 
             className="w-8 h-8" 
             onError={(e) => (e.target.src = '/placeholder-logo.png')}
           />
+          <span className="font-medium">{teams[1]}</span>
         </div>
       </div>
-      <select 
-        className="mt-4 p-2 rounded w-full border focus:ring-2 focus:ring-blue-500"
-        value={predictions[round][matchupId]?.winner || ''}
-        onChange={(e) => handlePrediction(round, matchupId, 'winner', e.target.value)}
-      >
-        <option value="">Select Winner</option>
-        {teams.map(team => (
-          <option key={team} value={team} disabled={team === 'TBD'}>{team}</option>
-        ))}
-      </select>
-      <select 
-        className="mt-6 p-2 rounded w-full border focus:ring-2 focus:ring-blue-500"
-        value={predictions[round][matchupId]?.games || ''}
-        onChange={(e) => handlePrediction(round, matchupId, 'games', e.target.value)}
-        disabled={!predictions[round][matchupId]?.winner || teams.includes('TBD')}
-      >
-        <option value="">Select Games</option>
-        <option value="4-0">4-0</option>
-        <option value="4-1">4-1</option>
-        <option value="4-2">4-2</option>
-        <option value="4-3">4-3</option>
-      </select>
-      <div className="absolute hidden group-hover:block bg-gray-800 text-white text-sm p-2 rounded -top-10 left-1/2 transform -translate-x-1/2">
-        {tooltip}
+      <div className="space-y-2">
+        <select 
+          className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500"
+          value={predictions[round][matchupId]?.winner || ''}
+          onChange={(e) => handlePrediction(round, matchupId, 'winner', e.target.value)}
+        >
+          <option value="">Select Winner</option>
+          {teams.map(team => (
+            <option key={team} value={team} disabled={team === 'TBD'}>{team}</option>
+          ))}
+        </select>
+        <select 
+          className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500"
+          value={predictions[round][matchupId]?.games || ''}
+          onChange={(e) => handlePrediction(round, matchupId, 'games', e.target.value)}
+          disabled={!predictions[round][matchupId]?.winner || teams.includes('TBD')}
+        >
+          <option value="">Select Games</option>
+          <option value="4-0">4-0</option>
+          <option value="4-1">4-1</option>
+          <option value="4-2">4-2</option>
+          <option value="4-3">4-3</option>
+        </select>
       </div>
+      <div className="border-b-2 border-[#1E90FF] my-4"></div>
     </div>
   );
 
@@ -237,7 +237,7 @@ const NBAPlayoffPredictor = () => {
               {error && <p className="text-red-500 text-sm">{error}</p>}
               <input
                 type="text"
-                placeholder="Name"
+                placeholder sistem="Name"
                 value={userData.name}
                 onChange={(e) => setUserData({ ...userData, name: e.target.value })}
                 className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -283,7 +283,6 @@ const NBAPlayoffPredictor = () => {
         {step === 2 && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Play-In Tournament Selection</h2>
-            {/* Play-In Selection Code (unchanged) */}
             <div>
               <h3 className="font-semibold text-gray-700 mb-2">Eastern Conference Play-In:</h3>
               <div className="space-y-4">
@@ -370,7 +369,6 @@ const NBAPlayoffPredictor = () => {
                 teams={[eastTeams[i], eastTeams[7-i]]} 
                 round="firstRound" 
                 matchupId={`east-${i}`}
-                tooltip="Select the team you think will win and the series length"
               />
             ))}
             <h3 className="font-semibold text-gray-700 mb-2 mt-4">Western Conference</h3>
@@ -380,7 +378,6 @@ const NBAPlayoffPredictor = () => {
                 teams={[westTeams[i], westTeams[7-i]]} 
                 round="firstRound" 
                 matchupId={`west-${i}`}
-                tooltip="Select the team you think will win and the series length"
               />
             ))}
             <div className="flex gap-4 mt-6">
@@ -408,7 +405,6 @@ const NBAPlayoffPredictor = () => {
                   teams={[semiFinalTeams.east[i*2] || 'TBD', semiFinalTeams.east[i*2+1] || 'TBD']} 
                   round="semifinals" 
                   matchupId={`east-semi-${i}`}
-                  tooltip="Predict the semifinal winners"
                 />
               ))
             ) : (
@@ -422,7 +418,6 @@ const NBAPlayoffPredictor = () => {
                   teams={[semiFinalTeams.west[i*2] || 'TBD', semiFinalTeams.west[i*2+1] || 'TBD']} 
                   round="semifinals" 
                   matchupId={`west-semi-${i}`}
-                  tooltip="Predict the semifinal winners"
                 />
               ))
             ) : (
@@ -450,14 +445,12 @@ const NBAPlayoffPredictor = () => {
               teams={[confFinalTeams.east[0] || 'TBD', confFinalTeams.east[1] || 'TBD']} 
               round="conferenceFinals" 
               matchupId="east-final"
-              tooltip="Predict the Eastern Conference champion"
             />
             <h3 className="font-semibold text-gray-700 mb-2 mt-4">Western Conference</h3>
             <Matchup 
               teams={[confFinalTeams.west[0] || 'TBD', confFinalTeams.west[1] || 'TBD']} 
               round="conferenceFinals" 
               matchupId="west-final"
-              tooltip="Predict the Western Conference champion"
             />
             <div className="flex gap-4 mt-6">
               <button onClick={() => setStep(4)} className="flex-1 p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors">
@@ -483,7 +476,6 @@ const NBAPlayoffPredictor = () => {
               ]} 
               round="finals" 
               matchupId="finals"
-              tooltip="Predict the NBA Champion"
             />
             <select
               className="w-full p-2 rounded mt-2 border focus:ring-2 focus:ring-blue-500"
