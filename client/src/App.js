@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 const NBAPlayoffPredictor = () => {
   const [step, setStep] = useState(1);
-  const [userData, setUserData] = useState({ name: '', email: '', phone: '' });
+  const [userData, setUserData] = useState({ name: '', email: '', phone: '', comments: '', paymentMethod: '' });
   const [predictions, setPredictions] = useState({
     firstRound: {},
     semifinals: {},
@@ -18,23 +18,21 @@ const NBAPlayoffPredictor = () => {
   const [confFinalTeams, setConfFinalTeams] = useState({ east: [], west: [] });
   const [isLoading, setIsLoading] = useState(false);
 
-  // Hardcoded top 6 seeds
   const eastSeeds = ['Celtics', 'Bucks', 'Pacers', 'Heat', 'Knicks', 'Cavaliers'];
   const westSeeds = ['Nuggets', 'Suns', 'Warriors', 'Lakers', 'Clippers', 'Grizzlies'];
-  // Play-in team pools
   const eastPlayInTeams = ['Magic', 'Pistons', 'Hawks', 'Wizards'];
   const westPlayInTeams = ['Rockets', 'Pelicans', 'Spurs', 'Timberwolves'];
   const mvpOptions = [
-    'De Andre Hunter', 'Ty Jerome', 'Jaylen Brown', 'Jayson Tatum', 'Jalen Brunson', 
-    'Karl-Anthony Towns', 'Giannis Antetokounmpo', 'Damian Lillard', 'Tyrese Haliburton', 
-    'Bennedict Mathurin', 'Cade Cunningham', 'Jaden Ivey', 'Jimmy Butler', 'Bam Adebayo', 
-    'Paolo Banchero', 'Franz Wagner', 'Shai Gilgeous-Alexander', 'Josh Giddey', 
-    'LeBron James', 'Luka Dončić', 'Nikola Jokić', 'Jamal Murray', 'Ja Morant', 
-    'Jaren Jackson Jr.', 'Jalen Green', 'Jabari Smith Jr.', 'Kawhi Leonard', 
+    'De Andre Hunter', 'Ty Jerome', 'Jaylen Brown', 'Jayson Tatum', 'Jalen Brunson',
+    'Karl-Anthony Towns', 'Giannis Antetokounmpo', 'Damian Lillard', 'Tyrese Haliburton',
+    'Bennedict Mathurin', 'Cade Cunningham', 'Jaden Ivey', 'Jimmy Butler', 'Bam Adebayo',
+    'Paolo Banchero', 'Franz Wagner', 'Shai Gilgeous-Alexander', 'Josh Giddey',
+    'LeBron James', 'Luka Dončić', 'Nikola Jokić', 'Jamal Murray', 'Ja Morant',
+    'Jaren Jackson Jr.', 'Jalen Green', 'Jabari Smith Jr.', 'Kawhi Leonard',
     'Paul George', 'Stephen Curry', 'Jimmy Butler'
   ];
+  const paymentMethods = ['Credit Card', 'PayPal', 'Cash']; // New payment options
 
-  // Dynamically updated full team lists after play-in selection
   const eastTeams = [...eastSeeds, playInSelections.east.seven, playInSelections.east.eight];
   const westTeams = [...westSeeds, playInSelections.west.seven, playInSelections.west.eight];
 
@@ -43,7 +41,6 @@ const NBAPlayoffPredictor = () => {
   const validateRound = (round) => {
     const roundData = predictions[round];
     const matchups = Object.keys(roundData);
-    console.log(`Validating ${round}:`, roundData, matchups);
     return matchups.length > 0 && matchups.every(matchup => 
       roundData[matchup].winner && roundData[matchup].games
     );
@@ -51,31 +48,24 @@ const NBAPlayoffPredictor = () => {
 
   const validatePlayIn = () => {
     return (
-      playInSelections.east.seven && 
-      playInSelections.east.eight && 
-      playInSelections.west.seven && 
-      playInSelections.west.eight &&
+      playInSelections.east.seven && playInSelections.east.eight && 
+      playInSelections.west.seven && playInSelections.west.eight &&
       playInSelections.east.seven !== playInSelections.east.eight &&
       playInSelections.west.seven !== playInSelections.west.eight
     );
   };
 
   const handlePrediction = (round, matchupId, field, value) => {
-    console.log(`Handling prediction: ${round}, ${matchupId}, ${field}, ${value}`);
-    setPredictions(prev => {
-      const updated = {
-        ...prev,
-        [round]: {
-          ...prev[round],
-          [matchupId]: {
-            ...(prev[round][matchupId] || {}),
-            [field]: value
-          }
+    setPredictions(prev => ({
+      ...prev,
+      [round]: {
+        ...prev[round],
+        [matchupId]: {
+          ...(prev[round][matchupId] || {}),
+          [field]: value
         }
-      };
-      console.log('Updated predictions:', updated);
-      return updated;
-    });
+      }
+    }));
     setError('');
   };
 
@@ -91,7 +81,6 @@ const NBAPlayoffPredictor = () => {
   };
 
   useEffect(() => {
-    console.log('Current step:', step);
     if (step >= 4) {
       const eastWinners = Object.entries(predictions.firstRound)
         .filter(([key, value]) => key.startsWith('east') && value.winner)
@@ -99,7 +88,6 @@ const NBAPlayoffPredictor = () => {
       const westWinners = Object.entries(predictions.firstRound)
         .filter(([key, value]) => key.startsWith('west') && value.winner)
         .map(([, value]) => value.winner);
-      console.log('First round winners:', { east: eastWinners, west: westWinners });
       setSemiFinalTeams({
         east: eastWinners.length === 4 ? eastWinners : eastWinners.concat(Array(4 - eastWinners.length).fill('TBD')),
         west: westWinners.length === 4 ? westWinners : westWinners.concat(Array(4 - westWinners.length).fill('TBD'))
@@ -112,48 +100,43 @@ const NBAPlayoffPredictor = () => {
       const westConfWinners = Object.entries(predictions.semifinals)
         .filter(([key, value]) => key.startsWith('west') && value.winner)
         .map(([, value]) => value.winner);
-      console.log('Semifinal winners:', { east: eastConfWinners, west: westConfWinners });
       setConfFinalTeams({
         east: eastConfWinners.length === 2 ? eastConfWinners : eastConfWinners.concat(Array(2 - eastConfWinners.length).fill('TBD')),
         west: westConfWinners.length === 2 ? westConfWinners : westConfWinners.concat(Array(2 - westConfWinners.length).fill('TBD'))
       });
     }
-    console.log('SemiFinalTeams after update:', semiFinalTeams);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [predictions, step]);
 
   const saveResultsToDatabase = async () => {
-  setIsLoading(true);
-  try {
-    // Save predictions
-    const saveResponse = await fetch('https://nba-playoff-predictor.onrender.com/api/predictions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userData, predictions, playInSelections }),
-    });
-    if (!saveResponse.ok) throw new Error(`Server responded with ${saveResponse.status}`);
+    setIsLoading(true);
+    try {
+      const saveResponse = await fetch('https://nba-playoff-predictor.onrender.com/api/predictions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userData, predictions, playInSelections }),
+      });
+      if (!saveResponse.ok) throw new Error(`Server responded with ${saveResponse.status}`);
 
-    // Send email
-    const emailResponse = await fetch('https://nba-playoff-predictor.onrender.com/api/send-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userData, predictions, playInSelections }),
-    });
-    if (!emailResponse.ok) {
-      const errorText = await emailResponse.text();
-      console.error(`Email sending failed: ${errorText}`);
-      setError('Predictions saved, but email failed. Check your email address.');
-    } else {
-      console.log('Email sent successfully');
+      const emailResponse = await fetch('https://nba-playoff-predictor.onrender.com/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userData, predictions, playInSelections }),
+      });
+      if (!emailResponse.ok) {
+        const errorText = await emailResponse.text();
+        console.error(`Email sending failed: ${errorText}`);
+        setError('Predictions saved, but email failed. Check your email address.');
+      } else {
+        console.log('Email sent successfully');
+      }
+    } catch (err) {
+      console.error('Error:', err.message);
+      setError(`Failed to save or send email: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+      if (!error) setStep(7);
     }
-  } catch (err) {
-    console.error('Error:', err.message);
-    setError(`Failed to save or send email: ${err.message}`);
-  } finally {
-    setIsLoading(false);
-    if (!error) setStep(7);
-  }
-};
+  };
 
   const Matchup = ({ teams, round, matchupId, tooltip }) => (
     <div className="bg-white p-4 rounded-lg shadow-md mb-6 relative group">
@@ -221,7 +204,6 @@ const NBAPlayoffPredictor = () => {
 
         {step === 1 && (
           <div className="space-y-6">
-            {/* Welcome Message */}
             <div className="text-center space-y-4">
               <div className="bg-gray-200 w-48 h-16 mx-auto rounded flex items-center justify-center text-gray-600 font-bold">
                 NBA POOL 2025 Logo
@@ -238,15 +220,14 @@ const NBAPlayoffPredictor = () => {
               </div>
             </div>
 
-            {/* Registration Form */}
             <form onSubmit={(e) => {
               e.preventDefault();
               if (!validateEmail(userData.email)) {
                 setError('Invalid email format');
                 return;
               }
-              if (!userData.name || !userData.phone) {
-                setError('All fields are required');
+              if (!userData.name || !userData.phone || !userData.paymentMethod) {
+                setError('Name, email, phone, and payment method are required');
                 return;
               }
               setError('');
@@ -275,6 +256,23 @@ const NBAPlayoffPredictor = () => {
                 onChange={(e) => setUserData({ ...userData, phone: e.target.value })}
                 className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
               />
+              <input
+                type="text"
+                placeholder="Comments (optional)"
+                value={userData.comments}
+                onChange={(e) => setUserData({ ...userData, comments: e.target.value })}
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <select
+                value={userData.paymentMethod}
+                onChange={(e) => setUserData({ ...userData, paymentMethod: e.target.value })}
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Payment Method</option>
+                {paymentMethods.map(method => (
+                  <option key={method} value={method}>{method}</option>
+                ))}
+              </select>
               <button type="submit" className="w-full p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
                 Next
               </button>
@@ -285,7 +283,7 @@ const NBAPlayoffPredictor = () => {
         {step === 2 && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Play-In Tournament Selection</h2>
-
+            {/* Play-In Selection Code (unchanged) */}
             <div>
               <h3 className="font-semibold text-gray-700 mb-2">Eastern Conference Play-In:</h3>
               <div className="space-y-4">
@@ -310,16 +308,13 @@ const NBAPlayoffPredictor = () => {
                     onChange={(e) => handlePlayInSelection('east', 'eight', e.target.value)}
                   >
                     <option value="">Choose Team</option>
-                    {eastPlayInTeams
-                      .filter(team => team !== playInSelections.east.seven)
-                      .map(team => (
-                        <option key={team} value={team}>{team}</option>
-                      ))}
+                    {eastPlayInTeams.filter(team => team !== playInSelections.east.seven).map(team => (
+                      <option key={team} value={team}>{team}</option>
+                    ))}
                   </select>
                 </div>
               </div>
             </div>
-
             <div>
               <h3 className="font-semibold text-gray-700 mb-2">Western Conference Play-In:</h3>
               <div className="space-y-4">
@@ -344,30 +339,21 @@ const NBAPlayoffPredictor = () => {
                     onChange={(e) => handlePlayInSelection('west', 'eight', e.target.value)}
                   >
                     <option value="">Choose Team</option>
-                    {westPlayInTeams
-                      .filter(team => team !== playInSelections.west.seven)
-                      .map(team => (
-                        <option key={team} value={team}>{team}</option>
-                      ))}
+                    {westPlayInTeams.filter(team => team !== playInSelections.west.seven).map(team => (
+                      <option key={team} value={team}>{team}</option>
+                    ))}
                   </select>
                 </div>
               </div>
             </div>
-
             <div className="flex gap-4 mt-6">
-              <button 
-                onClick={() => setStep(1)}
-                className="flex-1 p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
-              >
+              <button onClick={() => setStep(1)} className="flex-1 p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors">
                 Previous
               </button>
-              <button 
-                onClick={() => {
-                  if (validatePlayIn()) setStep(3);
-                  else setError('Please select unique No. 7 and No. 8 seeds for both conferences');
-                }}
-                className="flex-1 p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              >
+              <button onClick={() => {
+                if (validatePlayIn()) setStep(3);
+                else setError('Please select unique No. 7 and No. 8 seeds');
+              }} className="flex-1 p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
                 Next
               </button>
             </div>
@@ -398,19 +384,13 @@ const NBAPlayoffPredictor = () => {
               />
             ))}
             <div className="flex gap-4 mt-6">
-              <button 
-                onClick={() => setStep(2)}
-                className="flex-1 p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
-              >
+              <button onClick={() => setStep(2)} className="flex-1 p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors">
                 Previous
               </button>
-              <button 
-                onClick={() => {
-                  if (validateRound('firstRound')) setStep(4);
-                  else setError('Please complete all First Round predictions');
-                }}
-                className="flex-1 p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              >
+              <button onClick={() => {
+                if (validateRound('firstRound')) setStep(4);
+                else setError('Please complete all First Round predictions');
+              }} className="flex-1 p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
                 Next
               </button>
             </div>
@@ -432,7 +412,7 @@ const NBAPlayoffPredictor = () => {
                 />
               ))
             ) : (
-              <p className="text-red-500">Error: Insufficient Eastern Conference winners selected</p>
+              <p className="text-red-500">Error: Insufficient Eastern Conference winners</p>
             )}
             <h3 className="font-semibold text-gray-700 mb-2 mt-4">Western Conference</h3>
             {semiFinalTeams.west.length >= 4 ? (
@@ -446,22 +426,16 @@ const NBAPlayoffPredictor = () => {
                 />
               ))
             ) : (
-              <p className="text-red-500">Error: Insufficient Western Conference winners selected</p>
+              <p className="text-red-500">Error: Insufficient Western Conference winners</p>
             )}
             <div className="flex gap-4 mt-6">
-              <button 
-                onClick={() => setStep(3)}
-                className="flex-1 p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
-              >
+              <button onClick={() => setStep(3)} className="flex-1 p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors">
                 Previous
               </button>
-              <button 
-                onClick={() => {
-                  if (validateRound('semifinals')) setStep(5);
-                  else setError('Please complete all Semifinals predictions');
-                }}
-                className="flex-1 p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              >
+              <button onClick={() => {
+                if (validateRound('semifinals')) setStep(5);
+                else setError('Please complete all Semifinals predictions');
+              }} className="flex-1 p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
                 Next
               </button>
             </div>
@@ -486,19 +460,13 @@ const NBAPlayoffPredictor = () => {
               tooltip="Predict the Western Conference champion"
             />
             <div className="flex gap-4 mt-6">
-              <button 
-                onClick={() => setStep(4)}
-                className="flex-1 p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
-              >
+              <button onClick={() => setStep(4)} className="flex-1 p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors">
                 Previous
               </button>
-              <button 
-                onClick={() => {
-                  if (validateRound('conferenceFinals')) setStep(6);
-                  else setError('Please complete all Conference Finals predictions');
-                }}
-                className="flex-1 p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              >
+              <button onClick={() => {
+                if (validateRound('conferenceFinals')) setStep(6);
+                else setError('Please complete all Conference Finals predictions');
+              }} className="flex-1 p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
                 Next
               </button>
             </div>
@@ -527,27 +495,51 @@ const NBAPlayoffPredictor = () => {
                 <option key={player} value={player}>{player}</option>
               ))}
             </select>
+            <div className="mt-4 space-y-2">
+              <label className="block text-gray-600">Last Game Score (Team 1 - Team 2):</label>
+              <div className="flex gap-4">
+                <input
+                  type="number"
+                  min="80"
+                  max="180"
+                  placeholder="Team 1 Score (80-180)"
+                  value={predictions.finals.finals?.lastGameScore?.team1 || ''}
+                  onChange={(e) => {
+                    const value = e.target.value ? Math.min(Math.max(parseInt(e.target.value), 80), 180) : '';
+                    handlePrediction('finals', 'finals', 'lastGameScore', { ...predictions.finals.finals?.lastGameScore, team1: value });
+                  }}
+                  className="w-1/2 p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <input
+                  type="number"
+                  min="80"
+                  max="180"
+                  placeholder="Team 2 Score (80-180)"
+                  value={predictions.finals.finals?.lastGameScore?.team2 || ''}
+                  onChange={(e) => {
+                    const value = e.target.value ? Math.min(Math.max(parseInt(e.target.value), 80), 180) : '';
+                    handlePrediction('finals', 'finals', 'lastGameScore', { ...predictions.finals.finals?.lastGameScore, team2: value });
+                  }}
+                  className="w-1/2 p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
             <div className="flex gap-4 mt-6">
-              <button 
-                onClick={() => setStep(5)}
-                className="flex-1 p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
-              >
+              <button onClick={() => setStep(5)} className="flex-1 p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors">
                 Previous
               </button>
-              <button 
-                onClick={async () => {
-                  if (predictions.finals.finals?.winner && 
-                      predictions.finals.finals?.games && 
-                      predictions.finals.finals?.mvp) {
-                    await saveResultsToDatabase();
-                    if (!error) setStep(7);
-                  } else {
-                    setError('Please complete all Finals predictions');
-                  }
-                }}
-                className="flex-1 p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:bg-blue-300"
-                disabled={isLoading}
-              >
+              <button onClick={async () => {
+                if (predictions.finals.finals?.winner && 
+                    predictions.finals.finals?.games && 
+                    predictions.finals.finals?.mvp &&
+                    predictions.finals.finals?.lastGameScore?.team1 &&
+                    predictions.finals.finals?.lastGameScore?.team2) {
+                  await saveResultsToDatabase();
+                  if (!error) setStep(7);
+                } else {
+                  setError('Please complete all Finals predictions, including last game score');
+                }
+              }} className="flex-1 p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:bg-blue-300" disabled={isLoading}>
                 {isLoading ? 'Submitting...' : 'Submit Predictions'}
               </button>
             </div>
@@ -557,7 +549,13 @@ const NBAPlayoffPredictor = () => {
         {step === 7 && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Prediction Summary - {userData.name}</h2>
-
+            <div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">User Details:</h3>
+              <p>Email: {userData.email}</p>
+              <p>Phone: {userData.phone}</p>
+              <p>Comments: {userData.comments || 'None'}</p>
+              <p>Payment Method: {userData.paymentMethod}</p>
+            </div>
             {/* Eastern Conference */}
             <div>
               <h3 className="text-xl font-semibold text-gray-700 mb-2">Eastern Conference:</h3>
@@ -586,7 +584,6 @@ const NBAPlayoffPredictor = () => {
                 </div>
               </div>
             </div>
-
             {/* Western Conference */}
             <div>
               <h3 className="text-xl font-semibold text-gray-700 mb-2">Western Conference:</h3>
@@ -615,7 +612,6 @@ const NBAPlayoffPredictor = () => {
                 </div>
               </div>
             </div>
-
             {/* Finals */}
             <div>
               <h3 className="text-xl font-semibold text-gray-700 mb-2">Finals:</h3>
@@ -624,14 +620,11 @@ const NBAPlayoffPredictor = () => {
                 <div className="pl-8 space-y-1">
                   <div>{predictions.finals.finals?.winner} ({predictions.finals.finals?.games})</div>
                   <div>MVP: {predictions.finals.finals?.mvp}</div>
+                  <div>Last Game Score: {predictions.finals.finals?.lastGameScore?.team1} - {predictions.finals.finals?.lastGameScore?.team2}</div>
                 </div>
               </div>
             </div>
-
-            <button 
-              onClick={() => setStep(1)}
-              className="w-full p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors mt-6"
-            >
+            <button onClick={() => setStep(1)} className="w-full p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors mt-6">
               Thanks
             </button>
           </div>
