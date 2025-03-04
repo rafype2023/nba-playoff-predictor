@@ -31,7 +31,7 @@ const NBAPlayoffPredictor = () => {
     'Jaren Jackson Jr.', 'Jalen Green', 'Jabari Smith Jr.', 'Kawhi Leonard',
     'Paul George', 'Stephen Curry', 'Jimmy Butler'
   ];
-  const paymentMethods = ['Credit Card', 'PayPal', 'Cash']; // New payment options
+  const paymentMethods = ['ATH-Movil', 'PayPal', 'Cash']; // Updated from ['Credit Card', 'PayPal', 'Cash']
 
   const eastTeams = [...eastSeeds, playInSelections.east.seven, playInSelections.east.eight];
   const westTeams = [...westSeeds, playInSelections.west.seven, playInSelections.west.eight];
