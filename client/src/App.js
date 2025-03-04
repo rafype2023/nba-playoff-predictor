@@ -123,28 +123,37 @@ const NBAPlayoffPredictor = () => {
   }, [predictions, step]);
 
   const saveResultsToDatabase = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('https://nba-playoff-predictor.onrender.com/api/predictions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userData, predictions, playInSelections }),
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Server responded with ${response.status}: ${errorText}`);
-      }
-      const result = await response.json();
-      console.log('Successfully saved to database:', result);
-    } catch (err) {
-      console.error('Error saving to database:', err.message);
-      setError(`Failed to save predictions: ${err.message}`);
-    } finally {
-      setIsLoading(false);
+  setIsLoading(true);
+  try {
+    // Save predictions
+    const saveResponse = await fetch('https://nba-playoff-predictor.onrender.com/api/predictions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userData, predictions, playInSelections }),
+    });
+    if (!saveResponse.ok) throw new Error(`Server responded with ${saveResponse.status}`);
+
+    // Send email
+    const emailResponse = await fetch('https://nba-playoff-predictor.onrender.com/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userData, predictions, playInSelections }),
+    });
+    if (!emailResponse.ok) {
+      const errorText = await emailResponse.text();
+      console.error(`Email sending failed: ${errorText}`);
+      setError('Predictions saved, but email failed. Check your email address.');
+    } else {
+      console.log('Email sent successfully');
     }
-  };
+  } catch (err) {
+    console.error('Error:', err.message);
+    setError(`Failed to save or send email: ${err.message}`);
+  } finally {
+    setIsLoading(false);
+    if (!error) setStep(7);
+  }
+};
 
   const Matchup = ({ teams, round, matchupId, tooltip }) => (
     <div className="bg-white p-4 rounded-lg shadow-md mb-6 relative group">
