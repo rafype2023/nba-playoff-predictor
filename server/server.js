@@ -11,8 +11,8 @@ const PORT = process.env.PORT || 5001;
 app.use(cors());
 app.use(bodyParser.json());
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI)
+// MongoDB Connection (hardcoded for local testing)
+   mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
@@ -47,8 +47,8 @@ const Result = mongoose.model('Result', resultSchema, 'results');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'Poolnba00@gmail.com',
-    pass: 'wdtvkhmlfjguyrsb' // Replace with the 16-character code after generating
+    user: 'rafyperez@gmail.com',
+    pass: 'wdtvkhmlfjguyrsb' // Replace with your new 16-character code
   }
 });
 
@@ -269,7 +269,7 @@ app.post('/api/send-email', async (req, res) => {
   const { userData, predictions, playInSelections } = req.body;
 
   const mailOptions = {
-    from: 'Poolnba00@gmail.com',
+    from: 'rafyperez@gmail.com',
     to: userData.email,
     subject: 'Your NBA Playoff Pool 2025 Predictions',
     html: formatPredictionsForEmail(userData, predictions, playInSelections)
