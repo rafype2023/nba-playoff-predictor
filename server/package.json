@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/rafype2023/nba-playoff-picker#readme",
   "dependencies": {
+    "@balldontlie/sdk": "^1.2.2",
     "axios": "^1.7.2",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
