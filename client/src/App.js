@@ -138,7 +138,7 @@ const NBAPlayoffPredictor = () => {
     }
   };
 
-  const Matchup = ({ teams, round, matchupId, tooltip }) => (
+  const Matchup = ({ teams, round, matchupId }) => (
     <div className="bg-white p-4 rounded-lg shadow-md mb-4">
       <div className="flex items-center justify-center gap-4 mb-4">
         <div className="flex items-center gap-2">
@@ -189,6 +189,21 @@ const NBAPlayoffPredictor = () => {
     </div>
   );
 
+  // Get current date and time for version (Mar 04, 2025, 14:30 UTC)
+  const getVersion = () => {
+    const now = new Date();
+    return now.toLocaleString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'UTC'  // Consistent for deployment
+    }).replace(/, /g, '_').replace(/ /g, '').toLowerCase();
+  };
+
+  const version = getVersion(); // e.g., "mar04_2025_1430"
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-lg">
@@ -210,7 +225,7 @@ const NBAPlayoffPredictor = () => {
               </div>
               <h1 className="text-3xl font-bold text-gray-800">Welcome to the NBA Playoff Pool 2025!</h1>
               <div className="text-left max-w-md mx-auto">
-                <h3 className="text-lg font-semibold text-gray-700 mb-2"> Version 1 Scoring Rules:</h3>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Version 1 Scoring Rules:</h3>
                 <ul className="list-disc pl-5 text-gray-600 space-y-1">
                   <li>First Round: 1 pt for winner, 1 pt for games (max 2 per matchup)</li>
                   <li>Semifinals: 2 pts for winner, 1 pt for games (max 3 per matchup)</li>
@@ -237,7 +252,7 @@ const NBAPlayoffPredictor = () => {
               {error && <p className="text-red-500 text-sm">{error}</p>}
               <input
                 type="text"
-                placeholder sistem="Name"
+                placeholder="Name"
                 value={userData.name}
                 onChange={(e) => setUserData({ ...userData, name: e.target.value })}
                 className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
@@ -277,6 +292,7 @@ const NBAPlayoffPredictor = () => {
                 Next
               </button>
             </form>
+            <p className="text-xs text-gray-500 text-center mt-4">Version: {version}</p>
           </div>
         )}
 
@@ -356,6 +372,7 @@ const NBAPlayoffPredictor = () => {
                 Next
               </button>
             </div>
+            <p className="text-xs text-gray-500 text-center mt-4">Version: {version}</p>
           </div>
         )}
 
@@ -391,6 +408,7 @@ const NBAPlayoffPredictor = () => {
                 Next
               </button>
             </div>
+            <p className="text-xs text-gray-500 text-center mt-4">Version: {version}</p>
           </div>
         )}
 
@@ -434,6 +452,7 @@ const NBAPlayoffPredictor = () => {
                 Next
               </button>
             </div>
+            <p className="text-xs text-gray-500 text-center mt-4">Version: {version}</p>
           </div>
         )}
 
@@ -463,6 +482,7 @@ const NBAPlayoffPredictor = () => {
                 Next
               </button>
             </div>
+            <p className="text-xs text-gray-500 text-center mt-4">Version: {version}</p>
           </div>
         )}
 
@@ -501,6 +521,8 @@ const NBAPlayoffPredictor = () => {
                     handlePrediction('finals', 'finals', 'lastGameScore', { ...predictions.finals.finals?.lastGameScore, team1: value });
                   }}
                   className="w-1/2 p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                  inputMode="numeric"  // Ensures numeric keyboard on mobile (iOS)
+                  pattern="[0-9]*"     // Ensures only numbers
                 />
                 <input
                   type="number"
@@ -513,6 +535,8 @@ const NBAPlayoffPredictor = () => {
                     handlePrediction('finals', 'finals', 'lastGameScore', { ...predictions.finals.finals?.lastGameScore, team2: value });
                   }}
                   className="w-1/2 p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                  inputMode="numeric"  // Ensures numeric keyboard on mobile (iOS)
+                  pattern="[0-9]*"     // Ensures only numbers
                 />
               </div>
             </div>
@@ -535,6 +559,7 @@ const NBAPlayoffPredictor = () => {
                 {isLoading ? 'Submitting...' : 'Submit Predictions'}
               </button>
             </div>
+            <p className="text-xs text-gray-500 text-center mt-4">Version: {version}</p>
           </div>
         )}
 
@@ -619,6 +644,7 @@ const NBAPlayoffPredictor = () => {
             <button onClick={() => setStep(1)} className="w-full p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors mt-6">
               Thanks
             </button>
+            <p className="text-xs text-gray-500 text-center mt-4">Version: {version}</p>
           </div>
         )}
 
