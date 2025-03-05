@@ -23,7 +23,7 @@ const NBAPlayoffPredictor = () => {
   const eastPlayInTeams = ['Magic', 'Pistons', 'Hawks', 'Wizards'];
   const westPlayInTeams = ['Rockets', 'Pelicans', 'Spurs', 'Timberwolves'];
   const mvpOptions = [
-    'De Andre Hunter', 'Ty Jerome', 'Jaylen Brown', 'Jayson Tatum', 'Jalen Brunson',
+    'De Andre Hunter', 'Ty Jerome', 'Jaylen Brown', 'J. Tatum', 'Jalen Brunson',
     'Karl-Anthony Towns', 'Giannis Antetokounmpo', 'Damian Lillard', 'Tyrese Haliburton',
     'Bennedict Mathurin', 'Cade Cunningham', 'Jaden Ivey', 'Jimmy Butler', 'Bam Adebayo',
     'Paolo Banchero', 'Franz Wagner', 'Shai Gilgeous-Alexander', 'Josh Giddey',
