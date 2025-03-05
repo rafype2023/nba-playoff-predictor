@@ -1,9 +1,11 @@
+require('dotenv').config(); // Load environment variables from .env
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
-const { BalldontlieAPI } = require('@balldontlie/sdk'); // Import Ball Don’t Lie SDK
+const axios = require('axios'); // Use axios for HTTP requests
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -11,12 +13,30 @@ const PORT = process.env.PORT || 5001;
 // Use environment variable for Ball Don’t Lie API key (set in Render)
 const BALL_DONT_LIE_API_KEY = process.env.BALL_DONT_LIE_API_KEY || '84608476-9876-4573-afdc-9b792c56a768';
 
-// Initialize Ball Don’t Lie SDK with API key
-const api = new BalldontlieAPI({ apiKey: BALL_DONT_LIE_API_KEY });
+// Configure axios instance with Ball Don’t Lie API base URL and auth header
+const balldontlieApi = axios.create({
+  baseURL: 'https://api.balldontlie.io/v1',
+  headers: { 'Authorization': BALL_DONT_LIE_API_KEY }
+});
 
-app.use(cors({
-  origin: 'https://nba-playoff-predictor-1.onrender.com,https://score-details.onrender.com'
-}));
+// Configure CORS to allow multiple origins dynamically
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'http://localhost:3000', // Local development
+      'https://nba-playoff-predictor-1.onrender.com', // Production static site
+      'https://score-details.onrender.com' // Optional, if needed for score-details
+    ];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  optionsSuccessStatus: 200 // Some browsers (e.g., older IE) require 200 for OPTIONS
+};
+
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 mongoose.connect(process.env.MONGODB_URI)
@@ -51,7 +71,7 @@ const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: 'rafyperez@gmail.com',
-    pass: 'wdtvkhmlfjguyrsb' // Your app-specific password (consider using environment variable for security)
+    pass: process.env.GMAIL_PASSWORD || 'wdtvkhmlfjguyrsb' // Use environment variable for security
   }
 });
 
@@ -120,209 +140,314 @@ const formatPredictionsForEmail = (userData, predictions, playInSelections) => {
 
     <p>Thanks for participating in the NBA Playoff Pool 2025!</p>
   `;
-};
 
-// Endpoint: Save Predictions
-app.post('/api/predictions', async (req, res) => {
-  try {
-    const { userData, predictions, playInSelections } = req.body;
-    const newPrediction = new Prediction({ userData, predictions, playInSelections });
-    await newPrediction.save();
-    res.status(201).json({ message: 'Prediction saved', id: newPrediction._id });
-  } catch (error) {
-    console.error('Error saving prediction:', error);
-    res.status(500).json({ error: 'Failed to save prediction' });
-  }
-});
-
-// Endpoint: Save Results
-app.post('/api/results', async (req, res) => {
-  try {
-    const { firstRound, semifinals, conferenceFinals, finals } = req.body;
-    const newResult = new Result({ firstRound, semifinals, conferenceFinals, finals });
-    await newResult.save();
-    res.status(201).json({ message: 'Results saved', id: newResult._id });
-  } catch (error) {
-    console.error('Error saving results:', error);
-    res.status(500).json({ error: 'Failed to save results' });
-  }
-});
-
-// Endpoint: Calculate Scores
-app.get('/api/scores', async (req, res) => {
-  try {
-    const predictions = await Prediction.find();
-    if (!predictions || predictions.length === 0) {
-      console.log('No predictions found in database');
-      return res.json({ scores: [], standings: [] });
+  // New endpoint for NBA stats using direct API calls with pagination
+  const fetchAllGames = async (params) => {
+    let allGames = [];
+    let cursor = null;
+    try {
+      do {
+        const gamesResponse = await balldontlieApi.get('/games', {
+          params: { 
+            ...params, 
+            'per_page': 100, 
+            'cursor': cursor 
+          }
+        });
+        allGames = allGames.concat(gamesResponse.data.data);
+        cursor = gamesResponse.data.meta.next_cursor;
+      } while (cursor);
+      return allGames;
+    } catch (err) {
+      console.error('Error fetching all games:', err);
+      throw err;
     }
-
-    const results = await Result.findOne().sort({ timestamp: -1 });
-    if (!results) {
-      console.log('No results found in database');
-      return res.status(404).json({ error: 'No results found' });
-    }
-
-    console.log('Results:', JSON.stringify(results, null, 2));
-
-    const scores = predictions.map(prediction => {
-      const predRounds = prediction.predictions || prediction || {};
-      const user = prediction.userData?.name || 'Unknown';
-      console.log(`Processing prediction for ${user}:`, JSON.stringify(predRounds, null, 2));
-
-      let totalScore = 0;
-      const details = {
-        firstRound: [],
-        semifinals: [],
-        conferenceFinals: [],
-        finals: []
-      };
-
-      if (predRounds.firstRound && results.firstRound) {
-        for (const key in predRounds.firstRound) {
-          const pred = predRounds.firstRound[key] || {};
-          const res = results.firstRound[key] || {};
-          console.log(`Comparing First Round ${key}: Pred ${JSON.stringify(pred)}, Res ${JSON.stringify(res)}`);
-          let score = 0;
-          const winnerMatch = pred.winner === res.winner;
-          const gamesMatch = pred.games === res.games;
-          if (winnerMatch) {
-            score += 1;
-            console.log(`First Round winner match for ${key}: +1 point`);
-          }
-          if (gamesMatch) {
-            score += 1;
-            console.log(`First Round games match for ${key}: +1 point`);
-          }
-          totalScore += score;
-          details.firstRound.push({ key, prediction: pred, result: res, winnerMatch, gamesMatch, points: score });
-        }
-      }
-
-      if (predRounds.semifinals && results.semifinals) {
-        for (const key in predRounds.semifinals) {
-          const pred = predRounds.semifinals[key] || {};
-          const res = results.semifinals[key] || {};
-          console.log(`Comparing Semifinals ${key}: Pred ${JSON.stringify(pred)}, Res ${JSON.stringify(res)}`);
-          let score = 0;
-          const winnerMatch = pred.winner === res.winner;
-          const gamesMatch = pred.games === res.games;
-          if (winnerMatch) {
-            score += 2;
-            console.log(`Semifinals winner match for ${key}: +2 points`);
-          }
-          if (gamesMatch) {
-            score += 1;
-            console.log(`Semifinals games match for ${key}: +1 point`);
-          }
-          totalScore += score;
-          details.semifinals.push({ key, prediction: pred, result: res, winnerMatch, gamesMatch, points: score });
-        }
-      }
-
-      if (predRounds.conferenceFinals && results.conferenceFinals) {
-        for (const key in predRounds.conferenceFinals) {
-          const pred = predRounds.conferenceFinals[key] || {};
-          const res = results.conferenceFinals[key] || {};
-          console.log(`Comparing Conference Finals ${key}: Pred ${JSON.stringify(pred)}, Res ${JSON.stringify(res)}`);
-          let score = 0;
-          const winnerMatch = pred.winner === res.winner;
-          const gamesMatch = pred.games === res.games;
-          if (winnerMatch) {
-            score += 3;
-            console.log(`Conference Finals winner match for ${key}: +3 points`);
-          }
-          if (gamesMatch) {
-            score += 1;
-            console.log(`Conference Finals games match for ${key}: +1 point`);
-          }
-          totalScore += score;
-          details.conferenceFinals.push({ key, prediction: pred, result: res, winnerMatch, gamesMatch, points: score });
-        }
-      }
-
-      const predFinals = predRounds.finals || {};
-      const resFinals = results.finals || {};
-      const predFinalsData = predFinals.finals || {};
-      const resFinalsData = resFinals.finals || {};
-
-      console.log(`Comparing Finals: Pred ${JSON.stringify(predFinalsData)}, Res ${JSON.stringify(resFinalsData)}`);
-      let finalsScore = 0;
-      const winnerMatch = predFinalsData.winner === resFinalsData.winner;
-      const gamesMatch = predFinalsData.games === resFinalsData.games;
-      const mvpMatch = predFinalsData.mvp === resFinalsData.mvp;
-      if (winnerMatch) {
-        finalsScore += 4;
-        console.log('Finals winner match: +4 points');
-      }
-      if (gamesMatch) {
-        finalsScore += 1;
-        console.log('Finals games match: +1 point');
-      }
-      if (mvpMatch) {
-        finalsScore += 1;
-        console.log('Finals MVP match: +1 point');
-      }
-      totalScore += finalsScore;
-      details.finals.push({ key: 'finals', prediction: predFinalsData, result: resFinalsData, winnerMatch, gamesMatch, mvpMatch, points: finalsScore });
-
-      return { user, score: totalScore, details };
-    });
-
-    const standings = scores.map(({ user, score }) => ({ name: user, points: score }))
-      .sort((a, b) => b.points - a.points);
-
-    res.json({ scores, standings });
-  } catch (error) {
-    console.error('Error calculating scores:', error.stack);
-    res.status(500).json({ error: 'Failed to calculate scores', details: error.message });
-  }
-});
-
-// Endpoint: Send Email
-app.post('/api/send-email', async (req, res) => {
-  const { userData, predictions, playInSelections } = req.body;
-
-  const mailOptions = {
-    from: 'rafyperez@gmail.com',
-    to: userData.email,
-    subject: 'Your NBA Playoff Pool 2025 Predictions',
-    html: formatPredictionsForEmail(userData, predictions, playInSelections)
   };
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`Email sent to ${userData.email}`);
-    res.status(200).json({ message: 'Email sent successfully' });
-  } catch (error) {
-    console.error('Error sending email:', error);
-    res.status(500).json({ error: 'Failed to send email', details: error.message });
-  }
-});
+  app.get('/api/nba-stats', async (req, res) => {
+    try {
+      const { team1, team2 } = req.query; // Team names (e.g., "Boston Celtics", "Orlando Magic")
 
-// Endpoint: Get Prediction Distribution for Finals Winner and MVP
-app.get('/api/prediction-distribution', async (req, res) => {
-  try {
-    // Count finals winner predictions
-    const winnerCounts = await Prediction.aggregate([
-      { $group: { _id: "$predictions.finals.finals.winner", count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
-    ]);
+      // Fetch team IDs by name (case-insensitive) from /v1/teams
+      const teamsResponse = await balldontlieApi.get('/teams');
+      const teamMap = teamsResponse.data.data.reduce((acc, team) => {
+        acc[team.full_name.toLowerCase()] = team.id;
+        return acc;
+      }, {});
 
-    // Count MVP predictions
-    const mvpCounts = await Prediction.aggregate([
-      { $group: { _id: "$predictions.finals.finals.mvp", count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
-    ]);
+      const team1Name = team1.toLowerCase();
+      const team2Name = team2.toLowerCase();
+      const team1Id = teamMap[team1Name];
+      const team2Id = teamMap[team2Name];
 
-    res.json({
-      winnerDistribution: winnerCounts,
-      mvpDistribution: mvpCounts
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+      if (!team1Id || !team2Id) {
+        throw new Error(`Invalid team names: ${team1}, ${team2}`);
+      }
 
-// Start Server
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+      // Fetch team games for 2024 season to derive stats
+      const fetchTeamStats = async (teamId) => {
+        const games = await fetchAllGames({ 'team_ids[]': [teamId], 'seasons[]': ['2024'], postseason: false });
+
+        const gameStats = games.reduce((acc, game) => {
+          const isHome = game.home_team_id === teamId;
+          const teamScore = isHome ? game.home_team_score : game.visitor_team_score;
+          const oppScore = isHome ? game.visitor_team_score : game.home_team_score;
+          acc.points += teamScore || 0;
+          acc.oppPoints += oppScore || 0;
+          acc.games += 1;
+          return acc;
+        }, { points: 0, oppPoints: 0, games: 0 });
+
+        const winLoss = games.reduce((acc, game) => {
+          const isWin = (game.home_team_id === teamId && game.home_team_score > game.visitor_team_score) ||
+                        (game.visitor_team_id === teamId && game.visitor_team_score > game.home_team_score);
+          acc.wins += isWin ? 1 : 0;
+          acc.losses += isWin ? 0 : 1;
+          return acc;
+        }, { wins: 0, losses: 0 });
+
+        return {
+          avgScore: gameStats.games ? (gameStats.points / gameStats.games).toFixed(1) : 0,
+          avgAllowed: gameStats.games ? (gameStats.oppPoints / gameStats.games).toFixed(1) : 0,
+          record: `${winLoss.wins}-${winLoss.losses}`
+        };
+      };
+
+      // Fetch regular-season games between teams
+      const fetchRegularSeasonResults = async (team1Id, team2Id) => {
+        const games = await fetchAllGames({ 'team_ids[]': [team1Id, team2Id], 'seasons[]': ['2024'], postseason: false });
+
+        return games.map(game => ({
+          date: game.date,
+          team1Score: game.home_team_id === team1Id ? game.home_team_score : game.visitor_team_score,
+          team2Score: game.home_team_id === team2Id ? game.home_team_score : game.visitor_team_score,
+          location: game.home_team_id === team1Id ? 'Home' : 'Away'
+        }));
+      };
+
+      const team1Stats = await fetchTeamStats(team1Id);
+      const team2Stats = await fetchTeamStats(team2Id);
+      const regularSeasonResults = await fetchRegularSeasonResults(team1Id, team2Id);
+
+      res.json({
+        team1: { name: team1, stats: team1Stats },
+        team2: { name: team2, stats: team2Stats },
+        regularSeasonResults
+      });
+    } catch (err) {
+      console.error('Error fetching NBA stats:', err);
+      if (err.response) {
+        res.status(err.response.status).json({ 
+          error: 'Failed to fetch NBA stats', 
+          details: `${err.response.status} - ${err.response.data.message || err.message}` 
+        });
+      } else {
+        res.status(500).json({ error: 'Failed to fetch NBA stats', details: err.message });
+      }
+    }
+  });
+
+  // Endpoint: Save Predictions
+  app.post('/api/predictions', async (req, res) => {
+    try {
+      const { userData, predictions, playInSelections } = req.body;
+      const newPrediction = new Prediction({ userData, predictions, playInSelections });
+      await newPrediction.save();
+      res.status(201).json({ message: 'Prediction saved', id: newPrediction._id });
+    } catch (error) {
+      console.error('Error saving prediction:', error);
+      res.status(500).json({ error: 'Failed to save prediction' });
+    }
+  });
+
+  // Endpoint: Save Results
+  app.post('/api/results', async (req, res) => {
+    try {
+      const { firstRound, semifinals, conferenceFinals, finals } = req.body;
+      const newResult = new Result({ firstRound, semifinals, conferenceFinals, finals });
+      await newResult.save();
+      res.status(201).json({ message: 'Results saved', id: newResult._id });
+    } catch (error) {
+      console.error('Error saving results:', error);
+      res.status(500).json({ error: 'Failed to save results' });
+    }
+  });
+
+  // Endpoint: Calculate Scores
+  app.get('/api/scores', async (req, res) => {
+    try {
+      const predictions = await Prediction.find();
+      if (!predictions || predictions.length === 0) {
+        console.log('No predictions found in database');
+        return res.json({ scores: [], standings: [] });
+      }
+
+      const results = await Result.findOne().sort({ timestamp: -1 });
+      if (!results) {
+        console.log('No results found in database');
+        return res.status(404).json({ error: 'No results found' });
+      }
+
+      console.log('Results:', JSON.stringify(results, null, 2));
+
+      const scores = predictions.map(prediction => {
+        const predRounds = prediction.predictions || prediction || {};
+        const user = prediction.userData?.name || 'Unknown';
+        console.log(`Processing prediction for ${user}:`, JSON.stringify(predRounds, null, 2));
+
+        let totalScore = 0;
+        const details = {
+          firstRound: [],
+          semifinals: [],
+          conferenceFinals: [],
+          finals: []
+        };
+
+        if (predRounds.firstRound && results.firstRound) {
+          for (const key in predRounds.firstRound) {
+            const pred = predRounds.firstRound[key] || {};
+            const res = results.firstRound[key] || {};
+            console.log(`Comparing First Round ${key}: Pred ${JSON.stringify(pred)}, Res ${JSON.stringify(res)}`);
+            let score = 0;
+            const winnerMatch = pred.winner === res.winner;
+            const gamesMatch = pred.games === res.games;
+            if (winnerMatch) {
+              score += 1;
+              console.log(`First Round winner match for ${key}: +1 point`);
+            }
+            if (gamesMatch) {
+              score += 1;
+              console.log(`First Round games match for ${key}: +1 point`);
+            }
+            totalScore += score;
+            details.firstRound.push({ key, prediction: pred, result: res, winnerMatch, gamesMatch, points: score });
+          }
+        }
+
+        if (predRounds.semifinals && results.semifinals) {
+          for (const key in predRounds.semifinals) {
+            const pred = predRounds.semifinals[key] || {};
+            const res = results.semifinals[key] || {};
+            console.log(`Comparing Semifinals ${key}: Pred ${JSON.stringify(pred)}, Res ${JSON.stringify(res)}`);
+            let score = 0;
+            const winnerMatch = pred.winner === res.winner;
+            const gamesMatch = pred.games === res.games;
+            if (winnerMatch) {
+              score += 2;
+              console.log(`Semifinals winner match for ${key}: +2 points`);
+            }
+            if (gamesMatch) {
+              score += 1;
+              console.log(`Semifinals games match for ${key}: +1 point`);
+            }
+            totalScore += score;
+            details.semifinals.push({ key, prediction: pred, result: res, winnerMatch, gamesMatch, points: score });
+          }
+        }
+
+        if (predRounds.conferenceFinals && results.conferenceFinals) {
+          for (const key in predRounds.conferenceFinals) {
+            const pred = predRounds.conferenceFinals[key] || {};
+            const res = results.conferenceFinals[key] || {};
+            console.log(`Comparing Conference Finals ${key}: Pred ${JSON.stringify(pred)}, Res ${JSON.stringify(res)}`);
+            let score = 0;
+            const winnerMatch = pred.winner === res.winner;
+            const gamesMatch = pred.games === res.games;
+            if (winnerMatch) {
+              score += 3;
+              console.log(`Conference Finals winner match for ${key}: +3 points`);
+            }
+            if (gamesMatch) {
+              score += 1;
+              console.log(`Conference Finals games match for ${key}: +1 point`);
+            }
+            totalScore += score;
+            details.conferenceFinals.push({ key, prediction: pred, result: res, winnerMatch, gamesMatch, points: score });
+          }
+        }
+
+        const predFinals = predRounds.finals || {};
+        const resFinals = results.finals || {};
+        const predFinalsData = predFinals.finals || {};
+        const resFinalsData = resFinals.finals || {};
+
+        console.log(`Comparing Finals: Pred ${JSON.stringify(predFinalsData)}, Res ${JSON.stringify(resFinalsData)}`);
+        let finalsScore = 0;
+        const winnerMatch = predFinalsData.winner === resFinalsData.winner;
+        const gamesMatch = predFinalsData.games === resFinalsData.games;
+        const mvpMatch = predFinalsData.mvp === resFinalsData.mvp;
+        if (winnerMatch) {
+          finalsScore += 4;
+          console.log('Finals winner match: +4 points');
+        }
+        if (gamesMatch) {
+          finalsScore += 1;
+          console.log('Finals games match: +1 point');
+        }
+        if (mvpMatch) {
+          finalsScore += 1;
+          console.log('Finals MVP match: +1 point');
+        }
+        totalScore += finalsScore;
+        details.finals.push({ key: 'finals', prediction: predFinalsData, result: resFinalsData, winnerMatch, gamesMatch, mvpMatch, points: finalsScore });
+
+        return { user, score: totalScore, details };
+      });
+
+      const standings = scores.map(({ user, score }) => ({ name: user, points: score }))
+        .sort((a, b) => b.points - a.points);
+
+      res.json({ scores, standings });
+    } catch (error) {
+      console.error('Error calculating scores:', error.stack);
+      res.status(500).json({ error: 'Failed to calculate scores', details: error.message });
+    }
+  });
+
+  // Endpoint: Send Email
+  app.post('/api/send-email', async (req, res) => {
+    try {
+      const { userData, predictions, playInSelections } = req.body;
+
+      const mailOptions = {
+        from: 'rafyperez@gmail.com',
+        to: userData.email,
+        subject: 'Your NBA Playoff Pool 2025 Predictions',
+        html: formatPredictionsForEmail(userData, predictions, playInSelections)
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(`Email sent to ${userData.email}`);
+      res.status(200).json({ message: 'Email sent successfully' });
+    } catch (error) {
+      console.error('Error sending email:', error);
+      res.status(500).json({ error: 'Failed to send email', details: error.message });
+    }
+  });
+
+  // Endpoint: Get Prediction Distribution for Finals Winner and MVP
+  app.get('/api/prediction-distribution', async (req, res) => {
+    try {
+      // Count finals winner predictions
+      const winnerCounts = await Prediction.aggregate([
+        { $group: { _id: "$predictions.finals.finals.winner", count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]);
+
+      // Count MVP predictions
+      const mvpCounts = await Prediction.aggregate([
+        { $group: { _id: "$predictions.finals.finals.mvp", count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]);
+
+      res.json({
+        winnerDistribution: winnerCounts,
+        mvpDistribution: mvpCounts
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Start Server
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

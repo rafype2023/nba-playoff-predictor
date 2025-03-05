@@ -1,7 +1,7 @@
 {
   "name": "nba-playoff-picker",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
@@ -18,10 +18,10 @@
   },
   "homepage": "https://github.com/rafype2023/nba-playoff-picker#readme",
   "dependencies": {
-    "@balldontlie/sdk": "^1.2.2",
-    "axios": "^1.7.2",
+    "axios": "^1.8.1",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "mongoose": "^8.11.0",
     "nodemailer": "^6.10.0",
