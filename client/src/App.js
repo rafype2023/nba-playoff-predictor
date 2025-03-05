@@ -146,7 +146,7 @@ const NBAPlayoffPredictor = () => {
           <img 
             src={`/${teams[0].toLowerCase()}.png`} 
             alt={`${teams[0]} logo`} 
-            className="w-8 h-8" 
+            className="w-8 h-8"  // Expecting 32x32 pixels
             onError={(e) => (e.target.src = '/placeholder-logo.png')}
           />
         </div>
@@ -155,7 +155,7 @@ const NBAPlayoffPredictor = () => {
           <img 
             src={`/${teams[1].toLowerCase()}.png`} 
             alt={`${teams[1]} logo`} 
-            className="w-8 h-8" 
+            className="w-8 h-8"  // Expecting 32x32 pixels
             onError={(e) => (e.target.src = '/placeholder-logo.png')}
           />
           <span className="font-medium">{teams[1]}</span>
@@ -189,7 +189,7 @@ const NBAPlayoffPredictor = () => {
     </div>
   );
 
-  // Get current date and time for version (Mar 05, 2025, 20:00 UTC)
+  // Get current date and time for version (Mar 05, 2025, 21:00 UTC)
   const getVersion = () => {
     const now = new Date();
     return now.toLocaleString('en-US', {
@@ -202,7 +202,7 @@ const NBAPlayoffPredictor = () => {
     }).replace(/, /g, '_').replace(/ /g, '').toLowerCase();
   };
 
-  const version = getVersion(); // e.g., "mar05_2025_2000"
+  const version = getVersion(); // e.g., "mar05_2025_2100"
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -511,26 +511,26 @@ const NBAPlayoffPredictor = () => {
               <label className="block text-gray-600">Last Game Score (Team 1 - Team 2):</label>
               <div className="flex gap-4">
                 <input
-                  type="text"  // Changed from "number" to "text" for free input
+                  type="text"  // Free-format text for easier mobile input
                   placeholder="Team 1 Score"
                   value={predictions.finals.finals?.lastGameScore?.team1 || ''}
                   onChange={(e) => {
-                    const value = e.target.value;  // No min/max validation, just store as-is
+                    const value = e.target.value;  // No validation, store as-is
                     handlePrediction('finals', 'finals', 'lastGameScore', { ...predictions.finals.finals?.lastGameScore, team1: value });
                   }}
                   className="w-1/2 p-2 border rounded focus:ring-2 focus:ring-blue-500"
-                  inputMode="numeric"  // Still suggests numeric keyboard on mobile
+                  inputMode="numeric"  // Suggests numeric keyboard on mobile
                 />
                 <input
-                  type="text"  // Changed from "number" to "text" for free input
+                  type="text"  // Free-format text for easier mobile input
                   placeholder="Team 2 Score"
                   value={predictions.finals.finals?.lastGameScore?.team2 || ''}
                   onChange={(e) => {
-                    const value = e.target.value;  // No min/max validation, just store as-is
+                    const value = e.target.value;  // No validation, store as-is
                     handlePrediction('finals', 'finals', 'lastGameScore', { ...predictions.finals.finals?.lastGameScore, team2: value });
                   }}
                   className="w-1/2 p-2 border rounded focus:ring-2 focus:ring-blue-500"
-                  inputMode="numeric"  // Still suggests numeric keyboard on mobile
+                  inputMode="numeric"  // Suggests numeric keyboard on mobile
                 />
               </div>
             </div>
