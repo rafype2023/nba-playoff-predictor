@@ -29,7 +29,7 @@ const NBAPlayoffPredictor = () => {
     'Paolo Banchero', 'Franz Wagner', 'Shai Gilgeous-Alexander', 'Josh Giddey',
     'LeBron James', 'Luka Dončić', 'Nikola Jokić', 'Jamal Murray', 'Ja Morant',
     'Jaren Jackson Jr.', 'Jalen Green', 'Jabari Smith Jr.', 'Kawhi Leonard',
-    'Paul George', 'Stephen Curry', 'Jimmy Butler'
+    'Paul George', 'Stephen Curry', 'Rafy Perez'
   ];
   const paymentMethods = ['ATH-Movil', 'PayPal', 'Cash'];
 
