@@ -138,56 +138,56 @@ const NBAPlayoffPredictor = () => {
     }
   };
 
-  const Matchup = ({ teams, round, matchupId }) => (
-    <div className="bg-white p-4 rounded-lg shadow-md mb-4">
-      <div className="flex items-center justify-center gap-4 mb-4">
-        <div className="flex items-center gap-2">
-          <span className="font-medium">{teams[0]}</span>
-          <img 
-            src={`/${teams[0].toLowerCase()}.png`} 
-            alt={`${teams[0]} logo`} 
-            className="w-8 h-8"  // Expecting 32x32 pixels
-            onError={(e) => (e.target.src = '/placeholder-logo.png')}
-          />
-        </div>
-        <span className="text-gray-500">vs</span>
-        <div className="flex items-center gap-2">
-          <img 
-            src={`/${teams[1].toLowerCase()}.png`} 
-            alt={`${teams[1]} logo`} 
-            className="w-8 h-8"  // Expecting 32x32 pixels
-            onError={(e) => (e.target.src = '/placeholder-logo.png')}
-          />
-          <span className="font-medium">{teams[1]}</span>
-        </div>
+const Matchup = ({ teams, round, matchupId }) => (
+  <div className="bg-white p-4 rounded-lg shadow-md mb-4">
+    <div className="flex items-center justify-center gap-4 mb-4">
+      <div className="flex items-center gap-2">
+        <span className="font-medium">{teams[0]}</span>
+        <img 
+          src={`/${teams[0].toLowerCase()}.png`} 
+          alt={`${teams[0]} logo`} 
+          className="w-12 h-12"  // Increased to 48x48
+          onError={(e) => (e.target.src = '/placeholder-logo.png')}
+        />
       </div>
-      <div className="space-y-2">
-        <select 
-          className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500"
-          value={predictions[round][matchupId]?.winner || ''}
-          onChange={(e) => handlePrediction(round, matchupId, 'winner', e.target.value)}
-        >
-          <option value="">Select Winner</option>
-          {teams.map(team => (
-            <option key={team} value={team} disabled={team === 'TBD'}>{team}</option>
-          ))}
-        </select>
-        <select 
-          className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500"
-          value={predictions[round][matchupId]?.games || ''}
-          onChange={(e) => handlePrediction(round, matchupId, 'games', e.target.value)}
-          disabled={!predictions[round][matchupId]?.winner || teams.includes('TBD')}
-        >
-          <option value="">Select Games</option>
-          <option value="4-0">4-0</option>
-          <option value="4-1">4-1</option>
-          <option value="4-2">4-2</option>
-          <option value="4-3">4-3</option>
-        </select>
+      <span className="text-gray-500">vs</span>
+      <div className="flex items-center gap-2">
+        <img 
+          src={`/${teams[1].toLowerCase()}.png`} 
+          alt={`${teams[1]} logo`} 
+          className="w-12 h-12"  // Increased to 48x48
+          onError={(e) => (e.target.src = '/placeholder-logo.png')}
+        />
+        <span className="font-medium">{teams[1]}</span>
       </div>
-      <div className="border-b-2 border-[#1E90FF] my-4"></div>
     </div>
-  );
+    <div className="space-y-2">
+      <select 
+        className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500"
+        value={predictions[round][matchupId]?.winner || ''}
+        onChange={(e) => handlePrediction(round, matchupId, 'winner', e.target.value)}
+      >
+        <option value="">Select Winner</option>
+        {teams.map(team => (
+          <option key={team} value={team} disabled={team === 'TBD'}>{team}</option>
+        ))}
+      </select>
+      <select 
+        className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500"
+        value={predictions[round][matchupId]?.games || ''}
+        onChange={(e) => handlePrediction(round, matchupId, 'games', e.target.value)}
+        disabled={!predictions[round][matchupId]?.winner || teams.includes('TBD')}
+      >
+        <option value="">Select Games</option>
+        <option value="4-0">4-0</option>
+        <option value="4-1">4-1</option>
+        <option value="4-2">4-2</option>
+        <option value="4-3">4-3</option>
+      </select>
+    </div>
+    <div className="border-b-2 border-[#1E90FF] my-4"></div>
+  </div>
+);
 
   // Get current date and time for version (Mar 05, 2025, 21:00 UTC)
   const getVersion = () => {
