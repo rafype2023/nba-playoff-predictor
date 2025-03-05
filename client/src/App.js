@@ -23,7 +23,7 @@ const NBAPlayoffPredictor = () => {
   const eastPlayInTeams = ['Magic', 'Pistons', 'Hawks', 'Wizards'];
   const westPlayInTeams = ['Rockets', 'Pelicans', 'Spurs', 'Timberwolves'];
   const mvpOptions = [
-    'De Andre Hunter', 'Ty Jerome', 'Jaylen Brown', 'J. Tatum', 'Jalen Brunson',
+    'De Andre Hunter', 'Ty Jerome', 'Jaylen Brown', 'Jayson Tatum', 'Jalen Brunson',
     'Karl-Anthony Towns', 'Giannis Antetokounmpo', 'Damian Lillard', 'Tyrese Haliburton',
     'Bennedict Mathurin', 'Cade Cunningham', 'Jaden Ivey', 'Jimmy Butler', 'Bam Adebayo',
     'Paolo Banchero', 'Franz Wagner', 'Shai Gilgeous-Alexander', 'Josh Giddey',
@@ -189,7 +189,7 @@ const NBAPlayoffPredictor = () => {
     </div>
   );
 
-  // Get current date and time for version (Mar 04, 2025, 14:30 UTC)
+  // Get current date and time for version (Mar 05, 2025, 20:00 UTC)
   const getVersion = () => {
     const now = new Date();
     return now.toLocaleString('en-US', {
@@ -202,8 +202,8 @@ const NBAPlayoffPredictor = () => {
     }).replace(/, /g, '_').replace(/ /g, '').toLowerCase();
   };
 
-  const version = getVersion(); // e.g., "mar04_2025_1430"
- //test
+  const version = getVersion(); // e.g., "mar05_2025_2000"
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-lg">
@@ -511,32 +511,26 @@ const NBAPlayoffPredictor = () => {
               <label className="block text-gray-600">Last Game Score (Team 1 - Team 2):</label>
               <div className="flex gap-4">
                 <input
-                  type="number"
-                  min="80"
-                  max="180"
-                  placeholder="Team 1 Score (80-180)"
+                  type="text"  // Changed from "number" to "text" for free input
+                  placeholder="Team 1 Score"
                   value={predictions.finals.finals?.lastGameScore?.team1 || ''}
                   onChange={(e) => {
-                    const value = e.target.value ? Math.min(Math.max(parseInt(e.target.value), 80), 180) : '';
+                    const value = e.target.value;  // No min/max validation, just store as-is
                     handlePrediction('finals', 'finals', 'lastGameScore', { ...predictions.finals.finals?.lastGameScore, team1: value });
                   }}
                   className="w-1/2 p-2 border rounded focus:ring-2 focus:ring-blue-500"
-                  inputMode="numeric"  // Ensures numeric keyboard on mobile (iOS)
-                  pattern="[0-9]*"     // Ensures only numbers
+                  inputMode="numeric"  // Still suggests numeric keyboard on mobile
                 />
                 <input
-                  type="number"
-                  min="80"
-                  max="180"
-                  placeholder="Team 2 Score (80-180)"
+                  type="text"  // Changed from "number" to "text" for free input
+                  placeholder="Team 2 Score"
                   value={predictions.finals.finals?.lastGameScore?.team2 || ''}
                   onChange={(e) => {
-                    const value = e.target.value ? Math.min(Math.max(parseInt(e.target.value), 80), 180) : '';
+                    const value = e.target.value;  // No min/max validation, just store as-is
                     handlePrediction('finals', 'finals', 'lastGameScore', { ...predictions.finals.finals?.lastGameScore, team2: value });
                   }}
                   className="w-1/2 p-2 border rounded focus:ring-2 focus:ring-blue-500"
-                  inputMode="numeric"  // Ensures numeric keyboard on mobile (iOS)
-                  pattern="[0-9]*"     // Ensures only numbers
+                  inputMode="numeric"  // Still suggests numeric keyboard on mobile
                 />
               </div>
             </div>
