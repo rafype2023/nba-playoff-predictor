@@ -291,5 +291,29 @@ app.post('/api/send-email', async (req, res) => {
   }
 });
 
+// New Endpoint: Get Prediction Distribution for Finals Winner and MVP
+app.get('/api/prediction-distribution', async (req, res) => {
+  try {
+    // Count finals winner predictions
+    const winnerCounts = await Prediction.aggregate([
+      { $group: { _id: "$predictions.finals.finals.winner", count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    // Count MVP predictions
+    const mvpCounts = await Prediction.aggregate([
+      { $group: { _id: "$predictions.finals.finals.mvp", count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    res.json({
+      winnerDistribution: winnerCounts,
+      mvpDistribution: mvpCounts
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Start Server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
