@@ -1,53 +1,19 @@
-require('dotenv').config(); // Load environment variables from .env (for local development)
-
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
-const axios = require('axios'); // Use axios for HTTP requests
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Use environment variable for Ball Don’t Lie API key
-const BALL_DONT_LIE_API_KEY = process.env.BALL_DONT_LIE_API_KEY || '84608476-9876-4573-afdc-9b792c56a768';
-
-// Configure axios instance with Ball Don’t Lie API base URL and auth header
-const balldontlieApi = axios.create({
-  baseURL: 'https://api.balldontlie.io/v1',
-  headers: { 'Authorization': BALL_DONT_LIE_API_KEY }
-});
-
-// Configure CORS to allow multiple origins dynamically
-const corsOptions = {
-  origin: (origin, callback) => {
-    const allowedOrigins = [
-      'http://localhost:3000', // Local development
-      'https://nba-playoff-predictor-1.onrender.com', // Production static site
-      'https://score-details.onrender.com' // Optional, if needed for score-details
-    ];
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  optionsSuccessStatus: 200 // Some browsers (e.g., older IE) require 200 for OPTIONS
-};
-
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(bodyParser.json());
 
-// MongoDB Connection using environment variable
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Prediction Schema and Model
 const predictionSchema = new mongoose.Schema({
   userData: {
     name: String,
@@ -72,12 +38,11 @@ const resultSchema = new mongoose.Schema({
 const Prediction = mongoose.model('Prediction', predictionSchema, 'predictions');
 const Result = mongoose.model('Result', resultSchema, 'results');
 
-// Nodemailer Setup with Gmail using environment variable for password
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: 'rafyperez@gmail.com',
-    pass: process.env.GMAIL_PASSWORD || 'wdtvkhmlfjguyrsb' // Use environment variable for security
+    pass: 'wdtvkhmlfjguyrsb' // Your app-specific password
   }
 });
 
@@ -146,112 +111,7 @@ const formatPredictionsForEmail = (userData, predictions, playInSelections) => {
 
     <p>Thanks for participating in the NBA Playoff Pool 2025!</p>
   `;
-
-// New endpoint for NBA stats using direct API calls with pagination
-const fetchAllGames = async (params) => {
-  let allGames = [];
-  let cursor = null;
-  try {
-    do {
-      const gamesResponse = await balldontlieApi.get('/games', {
-        params: { 
-          ...params, 
-          'per_page': 100, 
-          'cursor': cursor 
-        }
-      });
-      allGames = allGames.concat(gamesResponse.data.data);
-      cursor = gamesResponse.data.meta.next_cursor;
-    } while (cursor);
-    return allGames;
-  } catch (err) {
-    console.error('Error fetching all games:', err);
-    throw err;
-  }
 };
-
-app.get('/api/nba-stats', async (req, res) => {
-  try {
-    const { team1, team2 } = req.query; // Team names (e.g., "Boston Celtics", "Orlando Magic")
-
-    // Fetch team IDs by name (case-insensitive) from /v1/teams
-    const teamsResponse = await balldontlieApi.get('/teams');
-    const teamMap = teamsResponse.data.data.reduce((acc, team) => {
-      acc[team.full_name.toLowerCase()] = team.id;
-      return acc;
-    }, {});
-
-    const team1Name = team1.toLowerCase();
-    const team2Name = team2.toLowerCase();
-    const team1Id = teamMap[team1Name];
-    const team2Id = teamMap[team2Name];
-
-    if (!team1Id || !team2Id) {
-      throw new Error(`Invalid team names: ${team1}, ${team2}`);
-    }
-
-    // Fetch team games for 2024 season to derive stats
-    const fetchTeamStats = async (teamId) => {
-      const games = await fetchAllGames({ 'team_ids[]': [teamId], 'seasons[]': ['2024'], postseason: false });
-
-      const gameStats = games.reduce((acc, game) => {
-        const isHome = game.home_team_id === teamId;
-        const teamScore = isHome ? game.home_team_score : game.visitor_team_score;
-        const oppScore = isHome ? game.visitor_team_score : game.home_team_score;
-        acc.points += teamScore || 0;
-        acc.oppPoints += oppScore || 0;
-        acc.games += 1;
-        return acc;
-      }, { points: 0, oppPoints: 0, games: 0 });
-
-      const winLoss = games.reduce((acc, game) => {
-        const isWin = (game.home_team_id === teamId && game.home_team_score > game.visitor_team_score) ||
-                      (game.visitor_team_id === teamId && game.visitor_team_score > game.home_team_score);
-        acc.wins += isWin ? 1 : 0;
-        acc.losses += isWin ? 0 : 1;
-        return acc;
-      }, { wins: 0, losses: 0 });
-
-      return {
-        avgScore: gameStats.games ? (gameStats.points / gameStats.games).toFixed(1) : 0,
-        avgAllowed: gameStats.games ? (gameStats.oppPoints / gameStats.games).toFixed(1) : 0,
-        record: `${winLoss.wins}-${winLoss.losses}`
-      };
-    };
-
-    // Fetch regular-season games between teams
-    const fetchRegularSeasonResults = async (team1Id, team2Id) => {
-      const games = await fetchAllGames({ 'team_ids[]': [team1Id, team2Id], 'seasons[]': ['2024'], postseason: false });
-
-      return games.map(game => ({
-        date: game.date,
-        team1Score: game.home_team_id === team1Id ? game.home_team_score : game.visitor_team_score,
-        team2Score: game.home_team_id === team2Id ? game.home_team_score : game.visitor_team_score,
-        location: game.home_team_id === team1Id ? 'Home' : 'Away'
-      }));
-    };
-
-    const team1Stats = await fetchTeamStats(team1Id);
-    const team2Stats = await fetchTeamStats(team2Id);
-    const regularSeasonResults = await fetchRegularSeasonResults(team1Id, team2Id);
-
-    res.json({
-      team1: { name: team1, stats: team1Stats },
-      team2: { name: team2, stats: team2Stats },
-      regularSeasonResults
-    });
-  } catch (err) {
-    console.error('Error fetching NBA stats:', err);
-    if (err.response) {
-      res.status(err.response.status).json({ 
-        error: 'Failed to fetch NBA stats', 
-        details: `${err.response.status} - ${err.response.data.message || err.message}` 
-      });
-    } else {
-      res.status(500).json({ error: 'Failed to fetch NBA stats', details: err.message });
-    }
-  }
-});
 
 // Endpoint: Save Predictions
 app.post('/api/predictions', async (req, res) => {
@@ -412,16 +272,16 @@ app.get('/api/scores', async (req, res) => {
 
 // Endpoint: Send Email
 app.post('/api/send-email', async (req, res) => {
+  const { userData, predictions, playInSelections } = req.body;
+
+  const mailOptions = {
+    from: 'rafyperez@gmail.com',
+    to: userData.email,
+    subject: 'Your NBA Playoff Pool 2025 Predictions',
+    html: formatPredictionsForEmail(userData, predictions, playInSelections)
+  };
+
   try {
-    const { userData, predictions, playInSelections } = req.body;
-
-    const mailOptions = {
-      from: 'rafyperez@gmail.com',
-      to: userData.email,
-      subject: 'Your NBA Playoff Pool 2025 Predictions',
-      html: formatPredictionsForEmail(userData, predictions, playInSelections)
-    };
-
     await transporter.sendMail(mailOptions);
     console.log(`Email sent to ${userData.email}`);
     res.status(200).json({ message: 'Email sent successfully' });
@@ -431,7 +291,7 @@ app.post('/api/send-email', async (req, res) => {
   }
 });
 
-// Endpoint: Get Prediction Distribution for Finals Winner and MVP
+// New Endpoint: Get Prediction Distribution for Finals Winner and MVP
 app.get('/api/prediction-distribution', async (req, res) => {
   try {
     // Count finals winner predictions
