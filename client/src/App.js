@@ -13,6 +13,7 @@ function App() {
   const [userData, setUserData] = useState({ name: '', email: '', phone: '', comments: '', paymentMethod: '' });
   const [nbaStats, setNbaStats] = useState({});
   const [error, setError] = useState(null);
+  const [currentMatchup, setCurrentMatchup] = useState(null); // Track current matchup for NBA stats
 
   const teams = [
     "Atlanta Hawks", "Boston Celtics", "Brooklyn Nets", "Charlotte Hornets", "Chicago Bulls",
@@ -45,6 +46,14 @@ function App() {
       setNbaStats({});
     }
   };
+
+  // Fetch NBA stats when step is 3 and matchup changes
+  useEffect(() => {
+    if (step === 3 && currentMatchup) {
+      const [team1, team2] = currentMatchup;
+      fetchNbaStats(team1, team2);
+    }
+  }, [step, currentMatchup]);
 
   const handlePredictionChange = (round, match, field, value) => {
     setPredictions(prev => ({
@@ -166,9 +175,10 @@ function App() {
             {[['east-1', 'east-8'], ['east-4', 'east-5'], ['east-3', 'east-6'], ['east-2', 'east-7']].map(([higher, lower]) => {
               const team1 = teams.find(t => t.includes(higher.split('-')[1])) || '';
               const team2 = teams.find(t => t.includes(lower.split('-')[1])) || '';
+              // Set current matchup for useEffect to fetch stats
               useEffect(() => {
-                fetchNbaStats(team1, team2);
-              }, [team1, team2]);
+                setCurrentMatchup([team1, team2]);
+              }, [team1, team2, step]);
               return (
                 <div key={higher}>
                   <p>{team1} vs {team2}</p>
@@ -192,9 +202,10 @@ function App() {
             {[['west-1', 'west-8'], ['west-4', 'west-5'], ['west-3', 'west-6'], ['west-2', 'west-7']].map(([higher, lower]) => {
               const team1 = teams.find(t => t.includes(higher.split('-')[1])) || '';
               const team2 = teams.find(t => t.includes(lower.split('-')[1])) || '';
+              // Set current matchup for useEffect to fetch stats
               useEffect(() => {
-                fetchNbaStats(team1, team2);
-              }, [team1, team2]);
+                setCurrentMatchup([team1, team2]);
+              }, [team1, team2, step]);
               return (
                 <div key={higher}>
                   <p>{team1} vs {team2}</p>
@@ -243,7 +254,7 @@ function App() {
                 </select>
                 <select value={predictions.semifinals[higher]?.games || ''} onChange={(e) => handlePredictionChange('semifinals', higher, 'games', e.target.value)}>
                   <option value="">Games</option>
-                  {[4, 5, 6, 7].map(games => <option key={games} value={files}>Mar06_2025_2000</files>)}
+                  {[4, 5, 6, 7].map(games => <option key={games} value={games}>{games}</option>)}
                 </select>
               </div>
             ))}
